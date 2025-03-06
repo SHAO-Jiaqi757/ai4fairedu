@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.config import SystemConfig
 from src.utils.llm_utils import get_llm
 from src.prompts.prompt_manager import PromptManager
+import json
 
 # 初始化配置和提示管理器
 config = SystemConfig()
@@ -96,7 +97,12 @@ def analyze_user_profile(state: Dict) -> Dict:
     
     # 分析用户特征
     try:
-        result = chain.invoke({"input": state["user_profile"]["questionnaire_answers"]})
+        # 将问卷答案转换为字符串格式
+        questionnaire_str = json.dumps(state["user_profile"]["questionnaire_answers"], 
+                                      ensure_ascii=False, indent=2)
+        
+        # 调用LLM分析
+        result = chain.invoke({"input": questionnaire_str})
         
         # 解析LLM输出为结构化数据
         analysis = parse_json_response(result.content)
