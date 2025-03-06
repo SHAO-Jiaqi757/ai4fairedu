@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}About AI4FairEdu{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>About AI4FairEdu</h1>
+    <p class="subtitle">Our mission, vision, and the technology behind our learning support system</p>
+</section>
+
+<section class="about-section">
+    <div class="about-content">
+        <h2>Our Mission</h2>
+        <p>AI4FairEdu is dedicated to creating an inclusive learning environment where students with learning disabilities, particularly ADHD and dyslexia, can thrive academically. We believe that every student deserves access to personalized learning tools that address their unique challenges and amplify their strengths.</p>
+        
+        <h2>The Problem We're Solving</h2>
+        <p>Traditional educational materials and approaches often fail to accommodate the diverse learning needs of students with ADHD and dyslexia. These students face significant barriers to academic success, including:</p>
+        
+        <div class="problem-cards">
+            <div class="problem-card">
+                <h3>For Students with ADHD</h3>
+                <ul>
+                    <li>Difficulty maintaining focus on lengthy or complex materials</li>
+                    <li>Challenges with time management and task prioritization</li>
+                    <li>Inconsistent engagement with learning content</li>
+                    <li>Struggles with organizing information and study materials</li>
+                </ul>
+            </div>
+            
+            <div class="problem-card">
+                <h3>For Students with Dyslexia</h3>
+                <ul>
+                    <li>Slow reading speed and comprehension difficulties</li>
+                    <li>Challenges with complex vocabulary and sentence structures</li>
+                    <li>Visual processing issues with standard text formats</li>
+                    <li>Difficulties with spelling and written expression</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-section alt-bg">
+    <div class="about-content">
+        <h2>Our Solution</h2>
+        <p>AI4FairEdu leverages artificial intelligence to transform standard learning materials into personalized, accessible formats that address the specific needs of students with ADHD and dyslexia.</p>
+        
+        <div class="solution-features">
+            <div class="solution-feature">
+                <div class="feature-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>Personalized User Profiling</h3>
+                    <p>Our system analyzes each user's learning profile through a comprehensive questionnaire, identifying specific challenges, strengths, and preferences.</p>
+                </div>
+            </div>
+            
+            <div class="solution-feature">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>ADHD Support Features</h3>
+                    <p>For students with attention challenges, we provide micro-content segmentation, progressive complexity adjustment, time awareness prompts, and visual engagement enhancements.</p>
+                </div>
+            </div>
+            
+            <div class="solution-feature">
+                <div class="feature-icon">
+                    <i class="fas fa-book-reader"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>Dyslexia Support Features</h3>
+                    <p>For students with reading difficulties, we offer syntax simplification, vocabulary substitution, text-to-speech integration, and dyslexia-friendly formatting options.</p>
+                </div>
+            </div>
+            
+            <div class="solution-feature">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="feature-content">
+                    <h3>Adaptive Learning</h3>
+                    <p>Our system continuously learns from user interactions and feedback to improve the personalization and effectiveness of its support features.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-section">
+    <div class="about-content">
+        <h2>Our Technology</h2>
+        <p>AI4FairEdu is built on a foundation of cutting-edge AI technologies and educational research:</p>
+        
+        <div class="tech-stack">
+            <div class="tech-item">
+                <h3>Large Language Models</h3>
+                <p>We utilize state-of-the-art language models to analyze and transform learning materials, ensuring high-quality content adaptation while preserving educational value.</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>Cognitive Science Research</h3>
+                <p>Our approach is informed by the latest research in cognitive science, educational psychology, and learning disabilities, ensuring evidence-based interventions.</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>Modular Architecture</h3>
+                <p>Our system features a flexible, modular design that allows for continuous improvement and the addition of new support features as research and technology evolve.</p>
+            </div>
+            
+            <div class="tech-item">
+                <h3>User-Centered Design</h3>
+                <p>We prioritize accessibility, usability, and user experience in every aspect of our system, ensuring that it meets the real-world needs of students with learning disabilities.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-section alt-bg">
+    <div class="about-content">
+        <h2>Our Team</h2>
+        <p>AI4FairEdu is developed by a multidisciplinary team of researchers, educators, technologists, and advocates for inclusive education.</p>
+        
+        <div class="team-grid">
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/placeholder.svg') }}" alt="Team member photo">
+                </div>
+                <h3>Dr. Li Wei</h3>
+                <p class="member-title">Project Lead</p>
+                <p class="member-bio">Expert in AI applications for education with a focus on accessibility and inclusion.</p>
+            </div>
+            
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/placeholder.svg') }}" alt="Team member photo">
+                </div>
+                <h3>Dr. Maria Rodriguez</h3>
+                <p class="member-title">Educational Psychologist</p>
+                <p class="member-bio">Specializes in learning disabilities and evidence-based interventions for ADHD and dyslexia.</p>
+            </div>
+            
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/placeholder.svg') }}" alt="Team member photo">
+                </div>
+                <h3>Alex Johnson</h3>
+                <p class="member-title">AI Engineer</p>
+                <p class="member-bio">Expert in natural language processing and adaptive learning systems.</p>
+            </div>
+            
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/placeholder.svg') }}" alt="Team member photo">
+                </div>
+                <h3>Sam Patel</h3>
+                <p class="member-title">UX Designer</p>
+                <p class="member-bio">Specializes in accessible design and user experience for educational technologies.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-content">
+        <h2>Join Us in Making Education Accessible for All</h2>
+        <p>Experience the power of personalized learning support designed for your unique needs.</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">Get Started Now</a>
+    </div>
+</section>
+{% endblock %} 

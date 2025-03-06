@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Learning View - AI4FairEdu{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/learning_view.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Your Personalized Learning Material</h1>
+    <p class="subtitle">Adapted content based on your learning profile</p>
+</section>
+
+<section class="learning-controls">
+    <div class="view-selector">
+        <button id="toggle-original" class="btn btn-secondary active">Original Text</button>
+        {% if difficulty_type == 'ADHD' or difficulty_type == 'Combined' %}
+        <button id="toggle-micro-units" class="btn btn-secondary">Micro Content Units</button>
+        {% endif %}
+        {% if difficulty_type == 'Dyslexia' or difficulty_type == 'Combined' %}
+        <button id="toggle-simplified" class="btn btn-secondary">Simplified Text</button>
+        {% endif %}
+    </div>
+    
+    <div class="accessibility-tools">
+        <div class="tool-group">
+            <label for="reading-mode">Reading Mode:</label>
+            <select id="reading-mode">
+                <option value="normal">Normal</option>
+                <option value="focus">Focus Mode</option>
+                <option value="bionic">Bionic Reading</option>
+            </select>
+        </div>
+        
+        <div class="tool-group">
+            <label for="text-to-speech">Text-to-Speech:</label>
+            <button id="play-tts" class="btn btn-icon"><i class="fas fa-play"></i></button>
+            <button id="pause-tts" class="btn btn-icon"><i class="fas fa-pause"></i></button>
+            <button id="stop-tts" class="btn btn-icon"><i class="fas fa-stop"></i></button>
+        </div>
+    </div>
+</section>
+
+<section class="learning-content">
+    <!-- Original Text View -->
+    <div id="original-view" class="content-view active">
+        <div class="content-container">
+            <h2>Original Text</h2>
+            <div class="original-text">
+                {{ session.get('learning_materials', {}).get('current_content', 'No content available.') | safe }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Micro Content Units View (for ADHD) -->
+    {% if difficulty_type == 'ADHD' or difficulty_type == 'Combined' %}
+    <div id="micro-units-view" class="content-view">
+        <div class="content-container">
+            <h2>Micro Content Units</h2>
+            <p class="view-description">Content broken down into smaller, manageable units to help maintain focus.</p>
+            
+            <div class="micro-units-container">
+                {% if micro_units %}
+                    {% for unit in micro_units %}
+                    <div class="micro-unit">
+                        <div class="unit-header">
+                            <h3>Unit {{ loop.index }}</h3>
+                            <div class="unit-time">Estimated time: {{ unit.estimated_time_minutes }} min</div>
+                        </div>
+                        <div class="unit-content">
+                            {{ unit.content | safe }}
+                        </div>
+                        {% if unit.key_points %}
+                        <div class="unit-key-points">
+                            <h4>Key Points:</h4>
+                            <ul>
+                                {% for point in unit.key_points %}
+                                <li>{{ point }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        <div class="unit-progress">
+                            <button class="btn btn-small mark-complete">Mark as Complete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-content-message">
+                        <p>No micro content units available. Please process your learning material again.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Simplified Text View (for Dyslexia) -->
+    {% if difficulty_type == 'Dyslexia' or difficulty_type == 'Combined' %}
+    <div id="simplified-view" class="content-view">
+        <div class="content-container">
+            <h2>Simplified Text</h2>
+            <p class="view-description">Text with simplified syntax and vocabulary assistance to improve readability.</p>
+            
+            <div class="simplified-text-container">
+                {% if simplified_text %}
+                    <div class="simplified-content">
+                        {{ simplified_text.content | safe }}
+                    </div>
+                    
+                    {% if simplified_text.vocabulary %}
+                    <div class="vocabulary-assistance">
+                        <h3>Vocabulary Assistance</h3>
+                        <div class="vocabulary-list">
+                            {% for term, definition in simplified_text.vocabulary.items() %}
+                            <div class="vocabulary-item">
+                                <div class="term">{{ term }}</div>
+                                <div class="definition">{{ definition }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="no-content-message">
+                        <p>No simplified text available. Please process your learning material again.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</section>
+
+<section class="learning-tools">
+    <div class="tools-container">
+        <div class="tool-card">
+            <div class="tool-header">
+                <h3>Study Timer</h3>
+            </div>
+            <div class="tool-content">
+                <div class="timer-display">
+                    <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                </div>
+                <div class="timer-controls">
+                    <button id="start-timer" class="btn btn-primary">Start</button>
+                    <button id="pause-timer" class="btn btn-secondary" disabled>Pause</button>
+                    <button id="reset-timer" class="btn btn-secondary">Reset</button>
+                </div>
+                <div class="timer-presets">
+                    <button class="timer-preset" data-minutes="5">5 min</button>
+                    <button class="timer-preset" data-minutes="15">15 min</button>
+                    <button class="timer-preset" data-minutes="25">25 min</button>
+                    <button class="timer-preset" data-minutes="45">45 min</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tool-card">
+            <div class="tool-header">
+                <h3>Notes</h3>
+            </div>
+            <div class="tool-content">
+                <textarea id="notes-area" placeholder="Take notes here..."></textarea>
+                <div class="notes-controls">
+                    <button id="save-notes" class="btn btn-primary">Save Notes</button>
+                    <button id="clear-notes" class="btn btn-secondary">Clear</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tool-card">
+            <div class="tool-header">
+                <h3>Feedback</h3>
+            </div>
+            <div class="tool-content">
+                <p>How helpful was this adaptation?</p>
+                <div class="feedback-stars">
+                    <span class="star" data-rating="1"><i class="fas fa-star"></i></span>
+                    <span class="star" data-rating="2"><i class="fas fa-star"></i></span>
+                    <span class="star" data-rating="3"><i class="fas fa-star"></i></span>
+                    <span class="star" data-rating="4"><i class="fas fa-star"></i></span>
+                    <span class="star" data-rating="5"><i class="fas fa-star"></i></span>
+                </div>
+                <textarea id="feedback-text" placeholder="Share your thoughts on this adaptation..."></textarea>
+                <button id="submit-feedback" class="btn btn-primary">Submit Feedback</button>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/learning_view.js') }}"></script>
+{% endblock %} 

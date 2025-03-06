@@ -29,7 +29,8 @@ class SystemConfig:
             "system": {
                 "max_concurrent_users": int(os.getenv("MAX_CONCURRENT_USERS", "10")),
                 "session_timeout": int(os.getenv("SESSION_TIMEOUT", "3600")),
-                "default_difficulty_type": os.getenv("DEFAULT_DIFFICULTY_TYPE", "auto_detect")
+                "default_difficulty_type": os.getenv("DEFAULT_DIFFICULTY_TYPE", "auto_detect"),
+                "language": os.getenv("SYSTEM_LANGUAGE", "en")  # Default to English
             }
         }
     

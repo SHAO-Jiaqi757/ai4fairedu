@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Learning Material - AI4FairEdu{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/material_upload.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Upload Learning Material</h1>
+    <p class="subtitle">Submit your learning materials for personalized adaptation</p>
+</section>
+
+<section class="upload-section">
+    <div class="upload-container">
+        <div class="upload-instructions">
+            <h2>How It Works</h2>
+            <ol class="instruction-steps">
+                <li>
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Enter a Title</h3>
+                        <p>Give your learning material a descriptive title to help you identify it later.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Paste or Type Your Content</h3>
+                        <p>Enter the text-based learning material you want to study. This can be lecture notes, textbook excerpts, articles, or any educational content.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Submit for Processing</h3>
+                        <p>Our system will analyze and adapt the content based on your learning profile and specific needs.</p>
+                    </div>
+                </li>
+                <li>
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Study with Personalized Support</h3>
+                        <p>Access your transformed learning material with features tailored to your specific learning needs.</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+        
+        <div class="upload-form-container">
+            <form id="material-upload-form" action="{{ url_for('process_material') }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="form-group">
+                    <label for="material_title">Material Title</label>
+                    <input type="text" id="material_title" name="material_title" placeholder="e.g., Introduction to Quantum Physics" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="material_text">Learning Material Content</label>
+                    <textarea id="material_text" name="material_text" rows="15" placeholder="Paste or type your learning material here..." required></textarea>
+                    <div class="text-stats">
+                        <span id="word-count">0 words</span>
+                        <span id="reading-time">0 min read</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Processing Options</label>
+                    <div class="processing-options">
+                        {% if session.get('user_analysis', {}).get('difficulty_type') == 'ADHD' or session.get('user_analysis', {}).get('difficulty_type') == 'Combined' %}
+                        <div class="option-checkbox">
+                            <input type="checkbox" id="micro_content" name="processing_options" value="micro_content" checked>
+                            <label for="micro_content">Break into micro-content units</label>
+                        </div>
+                        <div class="option-checkbox">
+                            <input type="checkbox" id="time_prompts" name="processing_options" value="time_prompts" checked>
+                            <label for="time_prompts">Add time awareness prompts</label>
+                        </div>
+                        {% endif %}
+                        
+                        {% if session.get('user_analysis', {}).get('difficulty_type') == 'Dyslexia' or session.get('user_analysis', {}).get('difficulty_type') == 'Combined' %}
+                        <div class="option-checkbox">
+                            <input type="checkbox" id="simplify_syntax" name="processing_options" value="simplify_syntax" checked>
+                            <label for="simplify_syntax">Simplify complex sentences</label>
+                        </div>
+                        <div class="option-checkbox">
+                            <input type="checkbox" id="vocabulary_help" name="processing_options" value="vocabulary_help" checked>
+                            <label for="vocabulary_help">Provide vocabulary assistance</label>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-large">Process Material</button>
+                    <button type="button" id="clear-form" class="btn btn-secondary">Clear Form</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+
+<section class="upload-tips">
+    <h2>Tips for Best Results</h2>
+    <div class="tips-grid">
+        <div class="tip-card">
+            <div class="tip-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h3>Plain Text Format</h3>
+            <p>For best results, submit plain text without complex formatting. Remove any special characters or formatting that might interfere with processing.</p>
+        </div>
+        
+        <div class="tip-card">
+            <div class="tip-icon">
+                <i class="fas fa-paragraph"></i>
+            </div>
+            <h3>Maintain Structure</h3>
+            <p>Keep paragraph breaks and section headings to help our system understand the structure of your content.</p>
+        </div>
+        
+        <div class="tip-card">
+            <div class="tip-icon">
+                <i class="fas fa-text-height"></i>
+            </div>
+            <h3>Optimal Length</h3>
+            <p>For best performance, submit materials between 500-5000 words. Longer texts can be split into multiple submissions.</p>
+        </div>
+        
+        <div class="tip-card">
+            <div class="tip-icon">
+                <i class="fas fa-language"></i>
+            </div>
+            <h3>Language Support</h3>
+            <p>Currently, our system works best with English-language content. Support for additional languages is coming soon.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const materialText = document.getElementById('material_text');
+        const wordCount = document.getElementById('word-count');
+        const readingTime = document.getElementById('reading-time');
+        const clearFormButton = document.getElementById('clear-form');
+        
+        // Update word count and estimated reading time
+        function updateTextStats() {
+            const text = materialText.value.trim();
+            const words = text ? text.split(/\s+/).length : 0;
+            const minutes = Math.ceil(words / 200); // Assuming average reading speed of 200 words per minute
+            
+            wordCount.textContent = `${words} words`;
+            readingTime.textContent = `${minutes} min read`;
+        }
+        
+        // Clear form
+        clearFormButton.addEventListener('click', function() {
+            document.getElementById('material_title').value = '';
+            materialText.value = '';
+            updateTextStats();
+        });
+        
+        // Update stats on input
+        materialText.addEventListener('input', updateTextStats);
+        
+        // Initialize stats
+        updateTextStats();
+    });
+</script>
+{% endblock %} 

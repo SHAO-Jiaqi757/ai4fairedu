@@ -1,6 +1,6 @@
 [[package]]
 name = "aiohappyeyeballs"
-version = "2.4.8"
+version = "2.5.0"
 description = "Happy Eyeballs for asyncio"
 category = "main"
 optional = false
@@ -111,6 +111,14 @@ tests = ["cloudpickle", "hypothesis", "mypy (>=1.11.1)", "pympler", "pytest-mypy
 tests-mypy = ["mypy (>=1.11.1)", "pytest-mypy-plugins"]
 
 [[package]]
+name = "blinker"
+version = "1.9.0"
+description = "Fast, simple object-to-object and broadcast signaling"
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[[package]]
 name = "certifi"
 version = "2025.1.31"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -136,6 +144,17 @@ description = "The Real First Universal Charset Detector. Open, modern and activ
 category = "main"
 optional = false
 python-versions = ">=3.7"
+
+[[package]]
+name = "click"
+version = "8.1.8"
+description = "Composable command line interface toolkit"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
 
 [[package]]
 name = "colorama"
@@ -189,6 +208,41 @@ python-versions = ">=3.7"
 
 [package.extras]
 test = ["pytest (>=6)"]
+
+[[package]]
+name = "flask"
+version = "3.1.0"
+description = "A simple framework for building complex web applications."
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+blinker = ">=1.9"
+click = ">=8.1.3"
+itsdangerous = ">=2.2"
+Jinja2 = ">=3.1.2"
+Werkzeug = ">=3.1"
+
+[package.extras]
+async = ["asgiref (>=3.2)"]
+dotenv = ["python-dotenv"]
+
+[[package]]
+name = "flask-wtf"
+version = "1.2.2"
+description = "Form rendering, validation, and CSRF protection for Flask with WTForms."
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+flask = "*"
+itsdangerous = "*"
+wtforms = "*"
+
+[package.extras]
+email = ["email-validator"]
 
 [[package]]
 name = "frozenlist"
@@ -275,6 +329,28 @@ python-versions = ">=3.6"
 
 [package.extras]
 all = ["ruff (>=0.6.2)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "flake8 (>=7.1.1)"]
+
+[[package]]
+name = "itsdangerous"
+version = "2.2.0"
+description = "Safely pass data to untrusted environments and back."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
+name = "jinja2"
+version = "3.1.6"
+description = "A very fast and expressive template engine."
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+MarkupSafe = ">=2.0"
+
+[package.extras]
+i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "jiter"
@@ -445,7 +521,7 @@ msgpack = ">=1.1.0,<2.0.0"
 
 [[package]]
 name = "langgraph-prebuilt"
-version = "0.1.1"
+version = "0.1.2"
 description = "Library with high-level APIs for creating and executing LangGraph agents and tools."
 category = "main"
 optional = false
@@ -509,6 +585,14 @@ langsmith-pyo3 = ["langsmith-pyo3 (>=0.1.0rc2,<0.2.0)"]
 pytest = ["pytest (>=7.0.0)", "rich (>=13.9.4,<14.0.0)"]
 
 [[package]]
+name = "markupsafe"
+version = "3.0.2"
+description = "Safely add untrusted strings to HTML/XML markup."
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[[package]]
 name = "marshmallow"
 version = "3.26.1"
 description = "A lightweight library for converting complex datatypes to and from native Python datatypes."
@@ -561,7 +645,7 @@ python-versions = ">=3.10"
 
 [[package]]
 name = "openai"
-version = "1.65.3"
+version = "1.65.4"
 description = "The official Python library for the openai API"
 category = "main"
 optional = false
@@ -806,7 +890,7 @@ notebook = ["ipywidgets (>=6)"]
 
 [[package]]
 name = "trustcall"
-version = "0.0.37"
+version = "0.0.38"
 description = "Tenacious & trustworthy tool calling built on LangGraph."
 category = "main"
 optional = false
@@ -816,6 +900,7 @@ python-versions = "<4.0,>=3.10"
 dydantic = ">=0.0.8,<1.0.0"
 jsonpatch = ">=1.33,<2.0"
 langgraph = ">=0.2.25"
+langgraph-prebuilt = ">=0.1.2"
 
 [[package]]
 name = "typing-extensions"
@@ -852,6 +937,34 @@ socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["zstandard (>=0.18.0)"]
 
 [[package]]
+name = "werkzeug"
+version = "3.1.3"
+description = "The comprehensive WSGI web application library."
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+MarkupSafe = ">=2.1.1"
+
+[package.extras]
+watchdog = ["watchdog (>=2.3)"]
+
+[[package]]
+name = "wtforms"
+version = "3.2.1"
+description = "Form validation and rendering for Python web development."
+category = "main"
+optional = false
+python-versions = ">=3.9"
+
+[package.dependencies]
+markupsafe = "*"
+
+[package.extras]
+email = ["email-validator"]
+
+[[package]]
 name = "yarl"
 version = "1.18.3"
 description = "Yet another URL library"
@@ -881,7 +994,7 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "c8eb445b97805b2668a6b68970f5bbb20a1a53a94f064b14679e48fac72c7301"
+content-hash = "5af655625e091dabf21a04c5f3ee4556e803f14a6997a9ba2b0df4a2fae057da"
 
 [metadata.files]
 aiohappyeyeballs = []
@@ -892,14 +1005,18 @@ anthropic = []
 anyio = []
 async-timeout = []
 attrs = []
+blinker = []
 certifi = []
 cffi = []
 charset-normalizer = []
+click = []
 colorama = []
 dataclasses-json = []
 distro = []
 dydantic = []
 exceptiongroup = []
+flask = []
+flask-wtf = []
 frozenlist = []
 greenlet = []
 h11 = []
@@ -907,6 +1024,8 @@ httpcore = []
 httpx = []
 httpx-sse = []
 idna = []
+itsdangerous = []
+jinja2 = []
 jiter = []
 jsonpatch = []
 jsonpointer = []
@@ -922,6 +1041,7 @@ langgraph-prebuilt = []
 langgraph-sdk = []
 langmem = []
 langsmith = []
+markupsafe = []
 marshmallow = []
 msgpack = []
 multidict = []
@@ -949,5 +1069,7 @@ trustcall = []
 typing-extensions = []
 typing-inspect = []
 urllib3 = []
+werkzeug = []
+wtforms = []
 yarl = []
 zstandard = []

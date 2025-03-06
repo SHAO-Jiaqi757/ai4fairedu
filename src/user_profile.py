@@ -37,25 +37,29 @@ class LearningDifficultyProfile(BaseModel):
 
 def analyze_user_profile(state: Dict) -> Dict:
     """
-    分析用户的学习困难特征，生成个性化支持策略
+    Analyze the user's learning difficulty characteristics and generate personalized support strategies
     
-    具体功能:
-    1. 从用户输入和行为模式识别学习困难特征
-    2. 估计各项学习能力的强度和挑战
-    3. 创建个性化的支持策略组合
-    4. 随用户交互持续优化配置文件
+    Specific functions:
+    1. Identify learning difficulty characteristics from user input and behavior patterns
+    2. Estimate the strength and challenges of various learning abilities
+    3. Create a personalized combination of support strategies
+    4. Continuously optimize the profile through user interaction
     """
     
-    # 获取LLM
+    # Get LLM
     llm = get_llm(config)
     
-    # 获取提示
-    prompt = prompt_manager.get_langchain_prompt("profile_analyzer")
+    # Get language setting from config
+    language = config.get("system.language")
     
-    # 构建链
+    # Get prompt based on language setting
+    prompt_name = "profile_analyzer_en" if language == "en" else "profile_analyzer"
+    prompt = prompt_manager.get_langchain_prompt(prompt_name)
+    
+    # Build chain
     chain = prompt | llm
     
-    # 检查是否有问卷答案
+    # Check if there are questionnaire answers
     if "questionnaire_answers" not in state.get("user_profile", {}):
         # 如果没有问卷答案，使用默认分析
         state["user_profile"]["analysis"] = {

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}AI4FairEdu - Personalized Learning Support{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Personalized Learning Support for Everyone</h1>
+        <p class="hero-subtitle">AI-powered tools to help students with ADHD and dyslexia achieve their full potential</p>
+        <div class="hero-buttons">
+            <a href="{{ url_for('questionnaire') }}" class="btn btn-primary">Start Your Journey</a>
+            <a href="{{ url_for('about') }}" class="btn btn-secondary">Learn More</a>
+        </div>
+    <!-- </div> -->
+    <!-- <div class="hero-image">
+        <img src="{{ url_for('static', filename='images/hero-illustration.svg') }}" alt="Students learning with AI assistance">
+    </div> -->
+</section>
+
+<section class="features">
+    <h2 class="section-title">How AI4FairEdu Helps You Learn</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-brain"></i>
+            </div>
+            <h3>ADHD Support</h3>
+            <p>Break down content into manageable chunks, provide timely reminders, and create an environment that minimizes distractions.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-book-reader"></i>
+            </div>
+            <h3>Dyslexia Support</h3>
+            <p>Simplify complex text, provide vocabulary assistance, and offer visual aids to enhance reading comprehension.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-user-cog"></i>
+            </div>
+            <h3>Personalized Analysis</h3>
+            <p>Analyze your learning profile to identify strengths and challenges, then tailor support strategies to your unique needs.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Progress Tracking</h3>
+            <p>Monitor your learning journey with detailed analytics and adjust strategies based on your performance.</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h3>Complete the Questionnaire</h3>
+                <p>Answer questions about your learning preferences, challenges, and strengths to help us understand your needs.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h3>Receive Your Analysis</h3>
+                <p>Our AI analyzes your responses to identify potential learning difficulties and recommend personalized strategies.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h3>Upload Learning Materials</h3>
+                <p>Submit text-based learning materials that you want to study more effectively.</p>
+            </div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h3>Study with Personalized Support</h3>
+                <p>Access your transformed learning materials with features tailored to your specific learning needs.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="testimonials">
+    <h2 class="section-title">What Our Users Say</h2>
+    <div class="testimonial-slider">
+        <div class="testimonial">
+            <div class="testimonial-content">
+                <p>"AI4FairEdu has transformed my learning experience. Breaking down complex topics into manageable chunks helps me stay focused and engaged."</p>
+            </div>
+            <div class="testimonial-author">
+                <div class="author-name">Alex Chen</div>
+                <div class="author-info">College Student with ADHD</div>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-content">
+                <p>"The text simplification feature has made reading academic papers so much easier. I can now understand complex concepts without getting overwhelmed by difficult vocabulary."</p>
+            </div>
+            <div class="testimonial-author">
+                <div class="author-name">Jamie Rodriguez</div>
+                <div class="author-info">Graduate Student with Dyslexia</div>
+            </div>
+        </div>
+        <div class="testimonial">
+            <div class="testimonial-content">
+                <p>"As an educator, I've seen remarkable improvements in my students' engagement and comprehension when using AI4FairEdu. It's a game-changer for inclusive education."</p>
+            </div>
+            <div class="testimonial-author">
+                <div class="author-name">Dr. Sarah Johnson</div>
+                <div class="author-info">Special Education Teacher</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-content">
+        <h2>Ready to Transform Your Learning Experience?</h2>
+        <p>Join thousands of students who have discovered their full potential with AI4FairEdu.</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">Get Started Now</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Testimonial slider functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const testimonials = document.querySelectorAll('.testimonial');
+        let currentTestimonial = 0;
+        
+        function showTestimonial(index) {
+            testimonials.forEach((testimonial, i) => {
+                testimonial.style.display = i === index ? 'block' : 'none';
+            });
+        }
+        
+        function nextTestimonial() {
+            currentTestimonial = (currentTestimonial + 1) % testimonials.length;
+            showTestimonial(currentTestimonial);
+        }
+        
+        // Initialize
+        showTestimonial(currentTestimonial);
+        
+        // Auto-rotate testimonials every 5 seconds
+        setInterval(nextTestimonial, 5000);
+    });
+</script>
+{% endblock %} 

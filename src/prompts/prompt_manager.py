@@ -7,6 +7,7 @@ from src.prompts.base import PromptTemplate
 
 # 导入所有提示模板函数
 from src.prompts.profile_analyzer import profile_analyzer_prompt
+from src.prompts.profile_analyzer_en import profile_analyzer_en_prompt
 from src.prompts.micro_content_divider import micro_content_divider_prompt
 from src.prompts.syntax_simplifier import syntax_simplifier_prompt
 from src.prompts.intervention_effectiveness import intervention_effectiveness_prompt
@@ -43,6 +44,7 @@ class PromptManager:
         """加载所有预定义提示"""
         # 用户分析提示
         self.prompts["profile_analyzer"] = profile_analyzer_prompt()
+        self.prompts["profile_analyzer_en"] = profile_analyzer_en_prompt()
         
         # ADHD支持提示
         self.prompts["micro_content_divider"] = micro_content_divider_prompt()

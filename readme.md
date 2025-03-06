@@ -188,23 +188,3 @@ python -m src.main --config path/to/config.json
 3. 提交更改 (`git commit -m 'Add some amazing feature'`)
 4. 推送到分支 (`git push origin feature/amazing-feature`)
 5. 创建 Pull Request
-
-## 许可证
-
-本项目采用 MIT 许可证 - 详情请参阅 [LICENSE](LICENSE) 文件
-
-## 联系方式
-
-如有任何问题或建议，请通过以下方式联系我们：
-
-- 项目负责人：[SHAO-Jiaqi](https://github.com/SHAO-Jiaqi757)
-- 项目仓库：[GitHub Issues](https://github.com/SHAO-Jiaqi757/ai4fairedu/issues)
-
-## 致谢
-
-感谢所有为本项目做出贡献的个人和组织，特别感谢：
-
-- OpenAI 提供的大语言模型技术支持
-- LangChain 和 LangGraph 框架
-- 所有参与测试和提供反馈的教育工作者和学生
-

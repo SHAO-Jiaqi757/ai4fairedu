@@ -36,6 +36,7 @@ ENV/
 logs/
 
 # 数据文件
+data
 data/results/
 data/user_profiles/
 data/learning_materials/
