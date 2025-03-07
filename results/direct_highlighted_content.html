@@ -1,0 +1,58 @@
+<html><head><title>Directly Highlighted Content</title></head><body><style>
+    /* Background highlighting styles */
+    .highlight-yellow { background-color: #ffffcc; }
+    .highlight-green { background-color: #e6ffe6; }
+    .highlight-blue { background-color: #e6f2ff; }
+    .highlight-pink { background-color: #ffe6f2; }
+    
+    /* Text highlighting styles */
+    .highlight-bold { font-weight: bold; }
+    .highlight-italic { font-style: italic; }
+    .highlight-underline { text-decoration: underline; }
+    .highlight-text-red { color: #cc0000; }
+    .highlight-text-blue { color: #0066cc; }
+    .highlight-text-green { color: #006600; }
+    
+    /* Special highlighting styles */
+    .highlight-definition {
+        border-bottom: 1px dotted #666;
+        position: relative;
+        cursor: help;
+    }
+    .highlight-definition:hover::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        background-color: #333;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        white-space: nowrap;
+        z-index: 1;
+    }
+    .highlight-key-concept {
+        font-weight: bold;
+        color: #0066cc;
+        border-bottom: 1px solid #0066cc;
+    }
+    .highlight-example {
+        background-color: #f9f9f9;
+        border-left: 3px solid #0066cc;
+        padding: 10px;
+        margin: 10px 0;
+    }
+    </style>
+
+Neural networks are a set of algorithms, modeled loosely after the human brain, that are designed to recognize patterns. They interpret sensory data through a kind of machine perception, labeling or clustering raw input. The patterns they recognize are numerical, contained in vectors, into which all real-world data, be it images, sound, text or time series, must be translated.
+
+Neural networks help us cluster and classify. You can think of them as a clustering and classification layer on top of the data you store and manage. They help to group unlabeled data according to similarities among the example inputs, and they classify data when they have a labeled dataset to train on.
+
+The building block of a neural network is the neuron, a mathematical function that takes several inputs and produces a single output. When we have multiple neurons arranged in layers, we call it a neural network. The first layer receives the raw input, and the final layer produces the output. In between, there can be multiple "hidden layers" that transform the data in complex ways.
+
+Each connection between neurons has a weight, which adjusts as the network learns. The learning process involves adjusting these weights to minimize the difference between the actual output and the expected output. This is done through a process called backpropagation, which calculates the gradient of the loss function with respect to the weights of the network.
+
+Training a neural network requires a large amount of labeled data and computational resources. However, once trained, the network can make predictions or classifications with new data very quickly. This makes neural networks suitable for real-time applications.
+
+Neural networks have been successfully applied to a wide range of problems, including image and speech recognition, natural language processing, and game playing. They are a key technology in the field of artificial intelligence and continue to drive advances in machine learning.
+        </body></html>

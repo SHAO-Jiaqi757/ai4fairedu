@@ -331,6 +331,14 @@ python-versions = ">=3.6"
 all = ["ruff (>=0.6.2)", "mypy (>=1.11.2)", "pytest (>=8.3.2)", "flake8 (>=7.1.1)"]
 
 [[package]]
+name = "iniconfig"
+version = "2.0.0"
+description = "brain-dead simple config-ini parsing"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "itsdangerous"
 version = "2.2.0"
 description = "Safely pass data to untrusted environments and back."
@@ -585,6 +593,18 @@ langsmith-pyo3 = ["langsmith-pyo3 (>=0.1.0rc2,<0.2.0)"]
 pytest = ["pytest (>=7.0.0)", "rich (>=13.9.4,<14.0.0)"]
 
 [[package]]
+name = "markdown"
+version = "3.7"
+description = "Python implementation of John Gruber's Markdown."
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+docs = ["mkdocs (>=1.5)", "mkdocs-nature (>=0.6)", "mdx-gh-links (>=0.2)", "mkdocstrings", "mkdocs-gen-files", "mkdocs-section-index", "mkdocs-literate-nav"]
+testing = ["coverage", "pyyaml"]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.2"
 description = "Safely add untrusted strings to HTML/XML markup."
@@ -682,6 +702,18 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "pluggy"
+version = "1.5.0"
+description = "plugin and hook calling mechanisms for python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.extras]
+dev = ["pre-commit", "tox"]
+testing = ["pytest", "pytest-benchmark"]
+
+[[package]]
 name = "propcache"
 version = "0.3.0"
 description = "Accelerated property cache"
@@ -741,6 +773,25 @@ python-dotenv = ">=0.21.0"
 azure-key-vault = ["azure-identity (>=1.16.0)", "azure-keyvault-secrets (>=4.8.0)"]
 toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
+
+[[package]]
+name = "pytest"
+version = "8.3.5"
+description = "pytest: simple powerful testing with Python"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[package.dependencies]
+colorama = {version = "*", markers = "sys_platform == \"win32\""}
+exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
+iniconfig = "*"
+packaging = "*"
+pluggy = ">=1.5,<2"
+tomli = {version = ">=1", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["argcomplete", "attrs (>=19.2)", "hypothesis (>=3.56)", "mock", "pygments (>=2.7.2)", "requests", "setuptools", "xmlschema"]
 
 [[package]]
 name = "python-dotenv"
@@ -871,6 +922,14 @@ requests = ">=2.26.0"
 blobfile = ["blobfile (>=2)"]
 
 [[package]]
+name = "tomli"
+version = "2.2.1"
+description = "A lil' TOML parser"
+category = "main"
+optional = false
+python-versions = ">=3.8"
+
+[[package]]
 name = "tqdm"
 version = "4.67.1"
 description = "Fast, Extensible Progress Meter"
@@ -994,7 +1053,7 @@ cffi = ["cffi (>=1.11)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "5af655625e091dabf21a04c5f3ee4556e803f14a6997a9ba2b0df4a2fae057da"
+content-hash = "c16c08e6e815e127669541c44bf6195ddaf68181fbb431727dec8647f221622e"
 
 [metadata.files]
 aiohappyeyeballs = []
@@ -1024,6 +1083,7 @@ httpcore = []
 httpx = []
 httpx-sse = []
 idna = []
+iniconfig = []
 itsdangerous = []
 jinja2 = []
 jiter = []
@@ -1041,6 +1101,7 @@ langgraph-prebuilt = []
 langgraph-sdk = []
 langmem = []
 langsmith = []
+markdown = []
 markupsafe = []
 marshmallow = []
 msgpack = []
@@ -1050,11 +1111,13 @@ numpy = []
 openai = []
 orjson = []
 packaging = []
+pluggy = []
 propcache = []
 pycparser = []
 pydantic = []
 pydantic-core = []
 pydantic-settings = []
+pytest = []
 python-dotenv = []
 pyyaml = []
 regex = []
@@ -1064,6 +1127,7 @@ sniffio = []
 sqlalchemy = []
 tenacity = []
 tiktoken = []
+tomli = []
 tqdm = []
 trustcall = []
 typing-extensions = []

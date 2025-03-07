@@ -1,194 +1,389 @@
 {% extends "base.html" %}
 
-{% block title %}Learning View - AI4FairEdu{% endblock %}
+{% block title %}Learning View - {{ material_title }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_view.css') }}">
 {% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <h1>Your Personalized Learning Material</h1>
-    <p class="subtitle">Adapted content based on your learning profile</p>
-</section>
-
-<section class="learning-controls">
-    <div class="view-selector">
-        <button id="toggle-original" class="btn btn-secondary active">Original Text</button>
-        {% if difficulty_type == 'ADHD' or difficulty_type == 'Combined' %}
-        <button id="toggle-micro-units" class="btn btn-secondary">Micro Content Units</button>
-        {% endif %}
-        {% if difficulty_type == 'Dyslexia' or difficulty_type == 'Combined' %}
-        <button id="toggle-simplified" class="btn btn-secondary">Simplified Text</button>
-        {% endif %}
-    </div>
+<!-- Debug information (only visible during development) -->
+{% if debug %}
+<div class="debug-info" style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-family: monospace; font-size: 12px;">
+    <h3>Debug Information</h3>
+    <p><strong>User Profile:</strong> {{ user_profile }}</p>
+    <p><strong>Difficulty Type:</strong> {{ user_profile.difficulty_type }}</p>
+    <p><strong>Support Level:</strong> {{ user_profile.support_level }}</p>
+    <p><strong>Processed Content Keys:</strong> {{ processed_content.keys()|list }}</p>
+    {% if processed_content.sections %}
+    <p><strong>Sections:</strong> {{ processed_content.sections|length }}</p>
+    <p><strong>First Section Keys:</strong> {{ processed_content.sections[0].keys()|list }}</p>
     
-    <div class="accessibility-tools">
-        <div class="tool-group">
-            <label for="reading-mode">Reading Mode:</label>
-            <select id="reading-mode">
-                <option value="normal">Normal</option>
-                <option value="focus">Focus Mode</option>
-                <option value="bionic">Bionic Reading</option>
-            </select>
-        </div>
-        
-        <div class="tool-group">
-            <label for="text-to-speech">Text-to-Speech:</label>
-            <button id="play-tts" class="btn btn-icon"><i class="fas fa-play"></i></button>
-            <button id="pause-tts" class="btn btn-icon"><i class="fas fa-pause"></i></button>
-            <button id="stop-tts" class="btn btn-icon"><i class="fas fa-stop"></i></button>
-        </div>
-    </div>
-</section>
-
-<section class="learning-content">
-    <!-- Original Text View -->
-    <div id="original-view" class="content-view active">
-        <div class="content-container">
-            <h2>Original Text</h2>
-            <div class="original-text">
-                {{ session.get('learning_materials', {}).get('current_content', 'No content available.') | safe }}
-            </div>
-        </div>
-    </div>
-    
-    <!-- Micro Content Units View (for ADHD) -->
-    {% if difficulty_type == 'ADHD' or difficulty_type == 'Combined' %}
-    <div id="micro-units-view" class="content-view">
-        <div class="content-container">
-            <h2>Micro Content Units</h2>
-            <p class="view-description">Content broken down into smaller, manageable units to help maintain focus.</p>
-            
-            <div class="micro-units-container">
-                {% if micro_units %}
-                    {% for unit in micro_units %}
-                    <div class="micro-unit">
-                        <div class="unit-header">
-                            <h3>Unit {{ loop.index }}</h3>
-                            <div class="unit-time">Estimated time: {{ unit.estimated_time_minutes }} min</div>
-                        </div>
-                        <div class="unit-content">
-                            {{ unit.content | safe }}
-                        </div>
-                        {% if unit.key_points %}
-                        <div class="unit-key-points">
-                            <h4>Key Points:</h4>
-                            <ul>
-                                {% for point in unit.key_points %}
-                                <li>{{ point }}</li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                        {% endif %}
-                        <div class="unit-progress">
-                            <button class="btn btn-small mark-complete">Mark as Complete</button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="no-content-message">
-                        <p>No micro content units available. Please process your learning material again.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
+    {% if processed_content.sections[0].micro_units %}
+    <p><strong>Micro Units:</strong> {{ processed_content.sections[0].micro_units|length }}</p>
+    <p><strong>First Micro Unit Keys:</strong> {{ processed_content.sections[0].micro_units[0].keys()|list }}</p>
     {% endif %}
     
-    <!-- Simplified Text View (for Dyslexia) -->
-    {% if difficulty_type == 'Dyslexia' or difficulty_type == 'Combined' %}
-    <div id="simplified-view" class="content-view">
-        <div class="content-container">
-            <h2>Simplified Text</h2>
-            <p class="view-description">Text with simplified syntax and vocabulary assistance to improve readability.</p>
-            
-            <div class="simplified-text-container">
-                {% if simplified_text %}
-                    <div class="simplified-content">
-                        {{ simplified_text.content | safe }}
+    {% if processed_content.sections[0].vocabulary %}
+    <p><strong>Vocabulary Terms:</strong> {{ processed_content.sections[0].vocabulary.keys()|list }}</p>
+    {% endif %}
+    {% else %}
+    <p><strong>No sections found in processed content</strong></p>
+    {% endif %}
+    <p><strong>Original Content Length:</strong> {{ original_content|length }}</p>
+    
+    {% if processed_content.interaction_history %}
+    <p><strong>Interaction History:</strong></p>
+    <ul>
+        {% for interaction in processed_content.interaction_history %}
+        <li>{{ interaction.step }}: {{ interaction.memory|join(', ') }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</div>
+{% endif %}
+
+<div class="learning-view-container">
+    <div class="learning-view-header">
+        <h1>{{ material_title }}</h1>
+        <div class="view-controls">
+            <button id="toggle-original" class="btn btn-outline-primary">Show Original</button>
+            <button id="toggle-processed" class="btn btn-primary active">Show Processed</button>
+        </div>
+    </div>
+
+    <!-- Debug info (only visible in development) -->
+    {% if config.DEBUG %}
+    <div class="debug-info" style="background: #f8f9fa; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
+        <h5>Debug Information</h5>
+        <p><strong>User Profile:</strong> {{ user_profile }}</p>
+        <p><strong>Difficulty Type:</strong> {{ user_profile.difficulty_type }}</p>
+        <p><strong>Support Level:</strong> {{ user_profile.support_level }}</p>
+        <p><strong>Sections:</strong> {{ processed_content.sections|length }}</p>
+        {% if processed_content.sections %}
+            <p><strong>First Section Keys:</strong> {{ processed_content.sections[0].keys()|list }}</p>
+            {% if processed_content.sections[0].micro_units %}
+                <p><strong>Micro Units:</strong> {{ processed_content.sections[0].micro_units|length }}</p>
+                <p><strong>First Micro Unit Keys:</strong> {{ processed_content.sections[0].micro_units[0].keys()|list }}</p>
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="content-container">
+        <!-- Content Views -->
+        <section class="page-header">
+            <h1>{{ material_title }}</h1>
+            <p class="subtitle">Personalized Learning Experience</p>
+        </section>
+
+        <div class="learning-container">
+            <!-- Left Sidebar -->
+            <aside class="learning-sidebar">
+                <div class="user-profile">
+                    <h3>Learning Profile</h3>
+                    <div class="profile-details">
+                        <div class="profile-item">
+                            <span class="label">Learning Type:</span>
+                            <span class="value">{{ user_profile.difficulty_type }}</span>
+                        </div>
+                        <div class="profile-item">
+                            <span class="label">Support Level:</span>
+                            <span class="value">{{ user_profile.support_level }}</span>
+                        </div>
                     </div>
-                    
-                    {% if simplified_text.vocabulary %}
-                    <div class="vocabulary-assistance">
-                        <h3>Vocabulary Assistance</h3>
-                        <div class="vocabulary-list">
-                            {% for term, definition in simplified_text.vocabulary.items() %}
-                            <div class="vocabulary-item">
-                                <div class="term">{{ term }}</div>
-                                <div class="definition">{{ definition }}</div>
+                </div>
+
+                <nav class="content-nav">
+                    <h3>Content Sections</h3>
+                    <ul class="nav-list">
+                        {% if processed_content.sections %}
+                            {% for section in processed_content.sections %}
+                            <li class="nav-item {% if loop.first %}active{% endif %}" data-section="{{ section.id }}">
+                                <span class="section-title">{{ section.title }}</span>
+                                <span class="section-meta">{{ section.estimated_time }}min</span>
+                            </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="nav-item active" data-section="default">
+                                <span class="section-title">Content</span>
+                                <span class="section-meta">N/A</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+
+                <div class="learning-tools">
+                    <h3>Learning Tools</h3>
+                    <div class="tools-grid">
+                        <button class="tool-btn" data-tool="focus">
+                            <i class="fas fa-eye"></i>
+                            <span>Focus Mode</span>
+                        </button>
+                        <button class="tool-btn" data-tool="tts">
+                            <i class="fas fa-volume-up"></i>
+                            <span>Read Aloud</span>
+                        </button>
+                        <button class="tool-btn" data-tool="notes">
+                            <i class="fas fa-sticky-note"></i>
+                            <span>Notes</span>
+                        </button>
+                        <button class="tool-btn" data-tool="timer">
+                            <i class="fas fa-clock"></i>
+                            <span>Timer</span>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content-area">
+                <div class="content-header">
+                    <div class="view-controls">
+                        <button class="view-btn active" data-view="adapted">Adapted View</button>
+                        <button class="view-btn" data-view="original">Original</button>
+                        <button class="view-btn" data-view="side-by-side">Side by Side</button>
+                    </div>
+                    <div class="content-actions">
+                        <button class="action-btn" title="Download"><i class="fas fa-download"></i></button>
+                        <button class="action-btn" title="Print"><i class="fas fa-print"></i></button>
+                        <button class="action-btn" title="Share"><i class="fas fa-share"></i></button>
+                    </div>
+                </div>
+
+                <div class="content-wrapper">
+                    <!-- Adapted Content View -->
+                    <div class="content-view adapted-view active">
+                        {% if processed_content.sections %}
+                            {% for section in processed_content.sections %}
+                            <div class="content-section {% if loop.first %}active{% endif %}" id="section-{{ section.id }}">
+                                <div class="section-header">
+                                    <h2>{{ section.title }}</h2>
+                                    <div class="section-meta">
+                                        <span class="reading-time">{{ section.estimated_time }}min read</span>
+                                        <span class="difficulty">{{ section.difficulty_level }}</span>
+                                    </div>
+                                </div>
+
+                                {% if section.key_concepts %}
+                                <div class="key-concepts">
+                                    <h3>Key Concepts</h3>
+                                    <ul class="concept-list">
+                                        {% for concept in section.key_concepts %}
+                                        <li>{{ concept }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if user_profile.difficulty_type in ['ADHD', 'Combined'] and section.micro_units %}
+                                <div class="micro-units">
+                                    {% for unit in section.micro_units %}
+                                    <div class="micro-unit">
+                                        <div class="unit-header">
+                                            <span class="unit-number">Unit {{ loop.index }}</span>
+                                            <span class="unit-time">{{ unit.estimated_time if unit.estimated_time is defined else unit.estimated_time_minutes if unit.estimated_time_minutes is defined else 2 }}min</span>
+                                            <button class="close-unit-btn"><i class="fas fa-times"></i></button>
+                                        </div>
+                                        <div class="unit-content collapsed">
+                                            {{ unit.content | safe }}
+                                        </div>
+                                        <button class="read-more-btn">Read More</button>
+                                        <div class="unit-progress">
+                                            <button class="mark-complete-btn">Mark as Complete</button>
+                                            <span class="completion-status">Not started</span>
+                                        </div>
+                                        {% if unit.check_points %}
+                                        <div class="check-points">
+                                            <h4>Check Your Understanding</h4>
+                                            <ul>
+                                                {% for point in unit.check_points %}
+                                                <li>{{ point }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% elif unit.key_points %}
+                                        <div class="check-points">
+                                            <h4>Key Points</h4>
+                                            <ul>
+                                                {% for point in unit.key_points %}
+                                                <li>{{ point }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% elif unit.check_questions %}
+                                        <div class="check-points">
+                                            <h4>Check Your Understanding</h4>
+                                            <ul>
+                                                {% for question in unit.check_questions %}
+                                                <li>{{ question }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% else %}
+                                <div class="section-content">
+                                    {% if user_profile.difficulty_type in ['Dyslexia', 'Combined'] and section.simplified_content %}
+                                        {{ section.simplified_content | safe }}
+                                    {% else %}
+                                        {{ section.content | safe }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+
+                                {% if section.vocabulary %}
+                                <div class="vocabulary">
+                                    <h3>Key Terms</h3>
+                                    <div class="vocabulary-grid">
+                                        {% for term, definition in section.vocabulary.items() %}
+                                        <div class="vocabulary-item">
+                                            <div class="term">{{ term }}</div>
+                                            <div class="definition">{{ definition }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
                             </div>
                             {% endfor %}
+                        {% else %}
+                            <div class="content-section active" id="section-default">
+                                <div class="section-header">
+                                    <h2>Content</h2>
+                                </div>
+                                <div class="section-content">
+                                    {{ original_content | safe }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Original Content View -->
+                    <div class="content-view original-view">
+                        {{ original_content | safe }}
+                    </div>
+
+                    <!-- Side by Side View -->
+                    <div class="content-view side-by-side-view">
+                        <div class="original-side">
+                            <h3>Original</h3>
+                            {{ original_content | safe }}
+                        </div>
+                        <div class="adapted-side">
+                            <h3>Adapted</h3>
+                            {% if processed_content.sections %}
+                                {% for section in processed_content.sections %}
+                                <div class="content-section">
+                                    <h4>{{ section.title }}</h4>
+                                    {{ section.content | safe }}
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <p>No adapted content available</p>
+                            {% endif %}
                         </div>
                     </div>
-                    {% endif %}
-                {% else %}
-                    <div class="no-content-message">
-                        <p>No simplified text available. Please process your learning material again.</p>
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-    {% endif %}
-</section>
+                </div>
+            </main>
 
-<section class="learning-tools">
-    <div class="tools-container">
-        <div class="tool-card">
-            <div class="tool-header">
-                <h3>Study Timer</h3>
-            </div>
-            <div class="tool-content">
-                <div class="timer-display">
-                    <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+            <!-- Right Sidebar -->
+            <aside class="tools-sidebar">
+                <!-- Focus Mode Panel -->
+                <div class="tool-panel" id="focus-panel">
+                    <h3>Focus Mode</h3>
+                    <div class="tool-controls">
+                        <div class="control-group">
+                            <label>Highlight Style</label>
+                            <select id="highlight-style">
+                                <option value="line">Line by Line</option>
+                                <option value="paragraph">Paragraph</option>
+                                <option value="section">Section</option>
+                            </select>
+                        </div>
+                        <div class="control-group">
+                            <label>Background Dim</label>
+                            <input type="range" id="dim-level" min="0" max="100" value="50">
+                        </div>
+                    </div>
                 </div>
-                <div class="timer-controls">
-                    <button id="start-timer" class="btn btn-primary">Start</button>
-                    <button id="pause-timer" class="btn btn-secondary" disabled>Pause</button>
-                    <button id="reset-timer" class="btn btn-secondary">Reset</button>
+
+                <!-- Text-to-Speech Panel -->
+                <div class="tool-panel" id="tts-panel">
+                    <h3>Text to Speech</h3>
+                    <div class="tool-controls">
+                        <div class="control-group">
+                            <label>Voice</label>
+                            <select id="voice-select"></select>
+                        </div>
+                        <div class="control-group">
+                            <label>Speed</label>
+                            <input type="range" id="speech-rate" min="0.5" max="2" step="0.1" value="1">
+                        </div>
+                        <div class="playback-controls">
+                            <button id="play-btn"><i class="fas fa-play"></i></button>
+                            <button id="pause-btn"><i class="fas fa-pause"></i></button>
+                            <button id="stop-btn"><i class="fas fa-stop"></i></button>
+                        </div>
+                    </div>
                 </div>
-                <div class="timer-presets">
-                    <button class="timer-preset" data-minutes="5">5 min</button>
-                    <button class="timer-preset" data-minutes="15">15 min</button>
-                    <button class="timer-preset" data-minutes="25">25 min</button>
-                    <button class="timer-preset" data-minutes="45">45 min</button>
+
+                <!-- Notes Panel -->
+                <div class="tool-panel" id="notes-panel">
+                    <h3>Notes</h3>
+                    <div class="tool-controls">
+                        <textarea id="notes-area" placeholder="Take notes here..."></textarea>
+                        <div class="notes-actions">
+                            <button id="save-notes">Save</button>
+                            <button id="clear-notes">Clear</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="tool-card">
-            <div class="tool-header">
-                <h3>Notes</h3>
-            </div>
-            <div class="tool-content">
-                <textarea id="notes-area" placeholder="Take notes here..."></textarea>
-                <div class="notes-controls">
-                    <button id="save-notes" class="btn btn-primary">Save Notes</button>
-                    <button id="clear-notes" class="btn btn-secondary">Clear</button>
+
+                <!-- Timer Panel -->
+                <div class="tool-panel" id="timer-panel">
+                    <h3>Study Timer</h3>
+                    <div class="tool-controls">
+                        <div class="timer-display">
+                            <span id="minutes">25</span>:<span id="seconds">00</span>
+                        </div>
+                        <div class="timer-presets">
+                            <button data-time="5">5m</button>
+                            <button data-time="15">15m</button>
+                            <button data-time="25" class="active">25m</button>
+                            <button data-time="45">45m</button>
+                        </div>
+                        <div class="timer-controls">
+                            <button id="start-timer">Start</button>
+                            <button id="pause-timer">Pause</button>
+                            <button id="reset-timer">Reset</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="tool-card">
-            <div class="tool-header">
-                <h3>Feedback</h3>
-            </div>
-            <div class="tool-content">
-                <p>How helpful was this adaptation?</p>
-                <div class="feedback-stars">
-                    <span class="star" data-rating="1"><i class="fas fa-star"></i></span>
-                    <span class="star" data-rating="2"><i class="fas fa-star"></i></span>
-                    <span class="star" data-rating="3"><i class="fas fa-star"></i></span>
-                    <span class="star" data-rating="4"><i class="fas fa-star"></i></span>
-                    <span class="star" data-rating="5"><i class="fas fa-star"></i></span>
-                </div>
-                <textarea id="feedback-text" placeholder="Share your thoughts on this adaptation..."></textarea>
-                <button id="submit-feedback" class="btn btn-primary">Submit Feedback</button>
-            </div>
+            </aside>
         </div>
     </div>
-</section>
+</div>
+
+<!-- Agent Explanation Panel -->
+{% if agents_used %}
+<div class="agent-explanation">
+    <h3>How This Content Was Adapted For You</h3>
+    <div class="agent-cards">
+        {% for agent in agents_used %}
+        <div class="agent-card">
+            <img src="{{ agent.icon }}" alt="{{ agent.name }}">
+            <div class="agent-info">
+                <h4>{{ agent.name }}</h4>
+                <p>{{ agent.description }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block extra_scripts %}

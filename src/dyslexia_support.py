@@ -4,6 +4,8 @@ from langgraph.graph import StateGraph
 from src.config import SystemConfig
 from src.utils.llm_utils import get_llm
 from src.prompts.prompt_manager import PromptManager
+from src.utils.text_highlighter import TextHighlighter, get_highlighter_for_user
+from src.utils.content_analyzer import get_elements_to_highlight
 
 # 初始化提示管理器和配置
 prompt_manager = PromptManager()
@@ -51,54 +53,134 @@ def syntax_simplifier(state: Dict) -> Dict:
             if content_keys:
                 state["learning_materials"]["current_content"] = state["learning_materials"][content_keys[0]]
             else:
-                # 使用第一个值作为内容
-                first_key = next(iter(state["learning_materials"]))
-                state["learning_materials"]["current_content"] = state["learning_materials"][first_key]
+                # 如果找不到内容字段，使用第一个非标题、非类型的字段
+                exclude_keys = ["title", "type", "difficulty_level", "estimated_reading_time_minutes"]
+                content_keys = [k for k in state["learning_materials"].keys() if k not in exclude_keys]
+                if content_keys:
+                    state["learning_materials"]["current_content"] = state["learning_materials"][content_keys[0]]
+                else:
+                    # 如果还是找不到，使用示例内容
+                    print("无法从学习材料中提取内容，使用示例内容")
+                    state["learning_materials"]["current_content"] = """
+                    全球气候变化是一个由多种复杂且相互关联的因素驱动的现象，这些因素包括但不限于大气中温室气体浓度的增加，
+                    这主要是由于化石燃料的燃烧和工业过程所产生的二氧化碳排放，以及由农业活动、废物处理和土地利用变化引起的
+                    其他温室气体如甲烷和氧化亚氮的排放增加所致，同时还受到太阳辐射变化、火山活动等自然因素的影响，所有这些
+                    因素共同作用，导致了全球气温的持续上升，进而引发了一系列环境问题，如极端天气事件频率增加、海平面上升、
+                    生物多样性减少等，这些问题对人类社会的各个方面都构成了严峻挑战。
+                    """
+    
+    # 获取当前内容
+    current_content = state["learning_materials"]["current_content"]
+    
+    # 获取用户分析结果
+    user_analysis = state.get("user_profile", {}).get("analysis", {})
+    difficulty_type = user_analysis.get("difficulty_type", "Dyslexia")
+    
+    # 获取用户问卷答案
+    questionnaire_answers = state.get("user_profile", {}).get("questionnaire_answers", {})
+    
+    # 创建提示
+    prompt = prompt_manager.get_prompt("dyslexia_simplification") or ChatPromptTemplate.from_messages([
+        ("system", """你是一位专门为阅读障碍学生提供支持的教育内容适配专家。你的任务是将复杂的学习材料转化为更易于阅读和理解的形式，同时保留原始内容的教育价值。
+
+请遵循以下原则：
+1. 将长句分解为多个简短的陈述句
+2. 使用简单、直接的句式结构（主语-谓语-宾语）
+3. 避免使用复杂的从句和嵌套结构
+4. 用更简单的词汇替换复杂或技术性词汇，但保留关键术语（并提供解释）
+5. 保持段落结构和逻辑流程
+6. 确保内容的准确性和完整性
+
+对于每个复杂或技术性术语，请提供简短的定义或解释，这些将作为词汇表呈现给学生。
+
+请输出：
+1. 简化后的文本
+2. 词汇表：包含关键术语及其简明定义"""),
+        ("human", "请简化以下学习材料，使其更适合阅读障碍学生：\n\n{content}")
+    ])
+    
+    # 调用LLM
+    response = llm.invoke(prompt.format(content=current_content))
+    
+    # 解析响应
+    simplified_text = ""
+    vocabulary = {}
+    
+    # 尝试从响应中提取简化文本和词汇表
+    import re
+    
+    # 查找简化文本部分
+    simplified_match = re.search(r'(简化后的文本|Simplified Text):(.*?)(?=(词汇表|Vocabulary)|$)', response.content, re.DOTALL | re.IGNORECASE)
+    if simplified_match:
+        simplified_text = simplified_match.group(2).strip()
+    else:
+        # 如果找不到明确的标记，假设前半部分是简化文本
+        content_parts = response.content.split('\n\n', 1)
+        if len(content_parts) > 1:
+            simplified_text = content_parts[0].strip()
         else:
-            # 创建一个简单的默认内容
-            state["learning_materials"]["current_content"] = "这是一个示例学习内容。请提供实际的学习材料以获得更好的支持。"
+            simplified_text = response.content.strip()
     
-    # 获取原始内容
-    original_content = state["learning_materials"]["current_content"]
-    
-    # 获取提示
-    prompt = prompt_manager.get_langchain_prompt("syntax_simplifier")
-    
-    # 构建链
-    chain = prompt | llm
-    
-    try:
-        # 简化句法
-        result = chain.invoke({"input": original_content})
-        # 解析结果
-        simplified_text = parse_simplified_text(result.content)
+    # 查找词汇表部分
+    vocabulary_match = re.search(r'(词汇表|Vocabulary):(.*)', response.content, re.DOTALL | re.IGNORECASE)
+    if vocabulary_match:
+        vocabulary_text = vocabulary_match.group(2).strip()
         
-        # 更新状态
-        state["processed_content"]["simplified_text"] = simplified_text
-        state["current_focus"] = "syntax_simplified"
-    except Exception as e:
-        print(f"句法简化时出错: {e}")
-        # 创建一个简单的默认简化
-        state["processed_content"]["simplified_text"] = {
-            "basic": "这是基础级简化版本。短句。简单词汇。清晰结构。",
-            "intermediate": "这是中级简化版本。句子稍长但结构清晰。使用常见词汇。保持逻辑简单。",
-            "advanced": "这是高级简化版本。保留一些复杂度但避免嵌套结构。使用精确词汇。保持原文风格。"
-        }
-        state["current_focus"] = "syntax_simplified"
+        # 解析词汇表项目
+        vocab_items = re.findall(r'[•\-\*]?\s*([^:]+):\s*([^\n]+)', vocabulary_text)
+        for term, definition in vocab_items:
+            vocabulary[term.strip()] = definition.strip()
+    
+    # 检查是否需要应用高亮
+    should_highlight = False
+    reading_patterns = questionnaire_answers.get("reading_patterns", {})
+    comprehension_aids = reading_patterns.get("comprehension_aids", [])
+    
+    if "highlighting" in comprehension_aids:
+        should_highlight = True
+    
+    # 如果需要高亮，识别要高亮的元素并应用高亮
+    if should_highlight:
+        # 获取用户的高亮器
+        highlighter = get_highlighter_for_user(questionnaire_answers)
+        
+        # 识别要高亮的元素
+        elements_to_highlight = get_elements_to_highlight(simplified_text, difficulty_type)
+        
+        # 将词汇表中的术语添加到定义高亮中
+        for term, definition in vocabulary.items():
+            elements_to_highlight["definitions"].append({
+                "text": term,
+                "metadata": {"definition": definition}
+            })
+        
+        # 应用高亮
+        for highlight_type, elements in elements_to_highlight.items():
+            simplified_text = highlighter.highlight_text(simplified_text, highlight_type, elements)
+        
+        # 添加CSS样式
+        simplified_text = f"<style>{highlighter.get_css()}</style>\n{simplified_text}"
+    
+    # 更新状态
+    if "processed_content" not in state:
+        state["processed_content"] = {}
+    
+    state["processed_content"]["simplified_text"] = {
+        "content": simplified_text,
+        "vocabulary": vocabulary
+    }
+    
+    # 记录处理历史
+    if "interaction_history" not in state:
+        state["interaction_history"] = []
+    
+    state["interaction_history"].append({
+        "step": "dyslexia_support_processor",
+        "tool": "syntax_simplifier",
+        "memory": ["完成阅读障碍支持处理"]
+    })
     
     return state
-
-def parse_simplified_text(content: str) -> Dict[str, str]:
-    """解析LLM生成的简化文本"""
-    # 简化实现，实际应该解析LLM返回的格式化内容
-    # 这里返回一个示例结果
-    return {
-        "basic": "全球气候正在变化。这一现象有多个原因。人类活动是主要原因。我们燃烧煤炭和石油产生二氧化碳。工厂排放废气。农业活动产生甲烷气体。自然因素也有影响。太阳辐射会变化。火山喷发会影响气候。气候变化导致问题。温度上升。极端天气更常见。海平面上升。动植物种类减少。这些问题对人类生活造成挑战。",
-        
-        "intermediate": "全球气候变化由多个因素引起。这些因素互相关联且很复杂。人类活动是主要原因。我们燃烧化石燃料产生二氧化碳。工业过程也排放温室气体。农业活动和废物处理产生甲烷和氧化亚氮。改变土地用途也会增加排放。自然因素同样影响气候。这包括太阳辐射变化和火山活动。所有这些因素一起导致全球温度上升。温度上升引发一系列环境问题。极端天气事件变得更频繁。海平面上升。生物多样性减少。这些环境问题对人类社会构成严峻挑战。",
-        
-        "advanced": "全球气候变化是由多种复杂因素驱动的现象。这些因素相互关联。人类活动是主要原因。燃烧化石燃料和工业过程产生大量二氧化碳。农业活动、废物处理和土地利用变化增加了甲烷和氧化亚氮的排放。这些都是温室气体。自然因素也影响气候变化。太阳辐射变化和火山活动是重要的自然因素。这些因素共同作用，导致全球气温持续上升。气温上升引发了多种环境问题。极端天气事件变得更频繁。海平面上升。生物多样性减少。这些环境问题对人类社会的各个方面都带来严峻挑战。"
-    }
 
 # 词汇替换引擎
 def vocabulary_substitution_engine(state: Dict) -> Dict:

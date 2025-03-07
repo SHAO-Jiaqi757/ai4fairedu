@@ -4,474 +4,391 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ===== View Switching =====
-    initViewSwitching();
-    
-    // ===== Reading Modes =====
-    initReadingModes();
-    
-    // ===== Text-to-Speech =====
-    initTextToSpeech();
-    
-    // ===== Study Timer =====
-    initStudyTimer();
-    
-    // ===== Notes Functionality =====
-    initNotes();
-    
-    // ===== Feedback System =====
-    initFeedback();
-    
-    // ===== Micro Units Progress =====
-    initMicroUnitProgress();
-});
-
-/**
- * Initialize view switching between original, micro units, and simplified text
- */
-function initViewSwitching() {
-    const viewButtons = document.querySelectorAll('.view-selector button');
+    // View Controls
+    const viewButtons = document.querySelectorAll('.view-btn');
     const contentViews = document.querySelectorAll('.content-view');
     
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
-            // Remove active class from all buttons and views
-            viewButtons.forEach(btn => btn.classList.remove('active'));
-            contentViews.forEach(view => view.classList.remove('active'));
+            const view = this.getAttribute('data-view');
             
-            // Add active class to clicked button
+            // Update active button
+            viewButtons.forEach(btn => btn.classList.remove('active'));
             this.classList.add('active');
             
-            // Show corresponding view
-            const viewId = this.id.replace('toggle-', '') + '-view';
-            document.getElementById(viewId).classList.add('active');
+            // Show selected view
+            contentViews.forEach(view => view.classList.remove('active'));
+            document.querySelector(`.${view}-view`).classList.add('active');
         });
     });
-}
-
-/**
- * Initialize reading modes (normal, focus, bionic)
- */
-function initReadingModes() {
-    const readingModeSelect = document.getElementById('reading-mode');
-    const contentContainers = document.querySelectorAll('.content-container');
     
-    readingModeSelect.addEventListener('change', function() {
-        const mode = this.value;
-        
-        contentContainers.forEach(container => {
-            container.classList.remove('focus-mode', 'bionic-mode');
+    // Section Navigation
+    const navItems = document.querySelectorAll('.nav-item');
+    const contentSections = document.querySelectorAll('.content-section');
+    
+    navItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
             
-            // Remove any previously applied bionic reading spans
-            const bionicSpans = container.querySelectorAll('.bionic-span');
-            bionicSpans.forEach(span => {
-                const parent = span.parentNode;
-                const text = span.textContent;
-                const textNode = document.createTextNode(text);
-                parent.replaceChild(textNode, span);
-            });
+            // Update active nav item
+            navItems.forEach(item => item.classList.remove('active'));
+            this.classList.add('active');
             
-            if (mode === 'focus') {
-                container.classList.add('focus-mode');
-            } else if (mode === 'bionic') {
-                container.classList.add('bionic-mode');
-                applyBionicReading(container);
-            }
+            // Show selected section
+            contentSections.forEach(section => section.classList.remove('active'));
+            document.getElementById(`section-${sectionId}`).classList.add('active');
         });
     });
-}
-
-/**
- * Apply bionic reading to text content
- * Bolds the first half of each word to improve reading speed and focus
- */
-function applyBionicReading(container) {
-    const textNodes = getTextNodes(container);
     
-    textNodes.forEach(node => {
-        if (node.nodeValue.trim() === '') return;
-        
-        const words = node.nodeValue.split(' ');
-        const bionicWords = words.map(word => {
-            if (word.length <= 1) return word;
+    // Tool Buttons
+    const toolButtons = document.querySelectorAll('.tool-btn');
+    const toolPanels = document.querySelectorAll('.tool-panel');
+    
+    toolButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tool = this.getAttribute('data-tool');
+            const panel = document.getElementById(`${tool}-panel`);
             
-            const midPoint = Math.ceil(word.length / 2);
-            const firstHalf = word.substring(0, midPoint);
-            const secondHalf = word.substring(midPoint);
-            
-            return `<strong>${firstHalf}</strong>${secondHalf}`;
+            // Toggle active state
+            this.classList.toggle('active');
+            panel.classList.toggle('active');
         });
-        
-        const span = document.createElement('span');
-        span.classList.add('bionic-span');
-        span.innerHTML = bionicWords.join(' ');
-        node.parentNode.replaceChild(span, node);
     });
-}
-
-/**
- * Get all text nodes within a container
- */
-function getTextNodes(node) {
-    const textNodes = [];
     
-    function getNodes(node) {
-        if (node.nodeType === 3) { // Text node
-            textNodes.push(node);
+    // Focus Mode
+    const highlightStyle = document.getElementById('highlight-style');
+    const dimLevel = document.getElementById('dim-level');
+    let focusModeActive = false;
+    
+    function toggleFocusMode(active) {
+        const contentArea = document.querySelector('.content-area');
+        focusModeActive = active;
+        
+        if (active) {
+            contentArea.classList.add('focus-mode');
+            contentArea.style.setProperty('--dim-level', `${dimLevel.value}%`);
         } else {
-            for (let i = 0; i < node.childNodes.length; i++) {
-                getNodes(node.childNodes[i]);
-            }
+            contentArea.classList.remove('focus-mode');
         }
     }
     
-    getNodes(node);
-    return textNodes;
-}
-
-/**
- * Initialize text-to-speech functionality
- */
-function initTextToSpeech() {
-    const playButton = document.getElementById('play-tts');
-    const pauseButton = document.getElementById('pause-tts');
-    const stopButton = document.getElementById('stop-tts');
-    
-    // Check if browser supports speech synthesis
-    if ('speechSynthesis' in window) {
-        const synth = window.speechSynthesis;
-        let utterance = null;
-        let currentText = '';
-        
-        playButton.addEventListener('click', function() {
-            // Get text from active view
-            const activeView = document.querySelector('.content-view.active');
-            const textContainer = activeView.querySelector('.original-text') || 
-                                  activeView.querySelector('.unit-content') || 
-                                  activeView.querySelector('.simplified-content');
-            
-            if (textContainer) {
-                const text = textContainer.textContent.trim();
-                
-                // If new text or no utterance, create new one
-                if (text !== currentText || !utterance) {
-                    currentText = text;
-                    utterance = new SpeechSynthesisUtterance(text);
-                    utterance.rate = 1.0;
-                    utterance.pitch = 1.0;
-                }
-                
-                // If paused, resume, otherwise start new
-                if (synth.paused) {
-                    synth.resume();
-                } else {
-                    synth.speak(utterance);
-                }
-            }
-        });
-        
-        pauseButton.addEventListener('click', function() {
-            if (synth.speaking) {
-                synth.pause();
-            }
-        });
-        
-        stopButton.addEventListener('click', function() {
-            synth.cancel();
-            utterance = null;
-            currentText = '';
-        });
-    } else {
-        // Hide TTS controls if not supported
-        document.querySelector('.tool-group:has(#text-to-speech)').style.display = 'none';
-    }
-}
-
-/**
- * Initialize study timer functionality
- */
-function initStudyTimer() {
-    const timerMinutes = document.getElementById('timer-minutes');
-    const timerSeconds = document.getElementById('timer-seconds');
-    const startTimerBtn = document.getElementById('start-timer');
-    const pauseTimerBtn = document.getElementById('pause-timer');
-    const resetTimerBtn = document.getElementById('reset-timer');
-    const timerPresets = document.querySelectorAll('.timer-preset');
-    
-    let timer;
-    let timeLeft = 25 * 60; // Default to 25 minutes
-    let timerRunning = false;
-    
-    function updateTimerDisplay() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
-        
-        timerMinutes.textContent = minutes.toString().padStart(2, '0');
-        timerSeconds.textContent = seconds.toString().padStart(2, '0');
-    }
-    
-    function startTimer() {
-        if (timerRunning) return;
-        
-        timerRunning = true;
-        startTimerBtn.disabled = true;
-        pauseTimerBtn.disabled = false;
-        
-        timer = setInterval(() => {
-            timeLeft--;
-            
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                timerRunning = false;
-                timeLeft = 0;
-                
-                // Play notification sound if available
-                const audio = new Audio('/static/sounds/timer-end.mp3');
-                audio.play().catch(err => {
-                    console.log('Audio play failed:', err);
-                });
-                
-                // Show notification
-                showNotification('Time is up!', 'Your study session is complete.');
-                
-                startTimerBtn.disabled = false;
-                pauseTimerBtn.disabled = true;
-            }
-            
-            updateTimerDisplay();
-        }, 1000);
-    }
-    
-    function pauseTimer() {
-        clearInterval(timer);
-        timerRunning = false;
-        startTimerBtn.disabled = false;
-        pauseTimerBtn.disabled = true;
-    }
-    
-    function resetTimer() {
-        clearInterval(timer);
-        timerRunning = false;
-        timeLeft = 25 * 60;
-        updateTimerDisplay();
-        startTimerBtn.disabled = false;
-        pauseTimerBtn.disabled = true;
-    }
-    
-    startTimerBtn.addEventListener('click', startTimer);
-    pauseTimerBtn.addEventListener('click', pauseTimer);
-    resetTimerBtn.addEventListener('click', resetTimer);
-    
-    timerPresets.forEach(preset => {
-        preset.addEventListener('click', function() {
-            const minutes = parseInt(this.dataset.minutes);
-            timeLeft = minutes * 60;
-            updateTimerDisplay();
-            
-            if (timerRunning) {
-                clearInterval(timer);
-                startTimer();
-            }
-        });
+    highlightStyle.addEventListener('change', function() {
+        const contentArea = document.querySelector('.content-area');
+        contentArea.setAttribute('data-highlight', this.value);
     });
     
-    // Initialize timer display
-    updateTimerDisplay();
-}
-
-/**
- * Initialize notes functionality with local storage
- */
-function initNotes() {
+    dimLevel.addEventListener('input', function() {
+        if (focusModeActive) {
+            document.querySelector('.content-area').style.setProperty('--dim-level', `${this.value}%`);
+        }
+    });
+    
+    // Text to Speech
+    const voiceSelect = document.getElementById('voice-select');
+    const speechRate = document.getElementById('speech-rate');
+    const playBtn = document.getElementById('play-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const stopBtn = document.getElementById('stop-btn');
+    let speechSynth = window.speechSynthesis;
+    let currentUtterance = null;
+    
+    // Populate voice select
+    function loadVoices() {
+        const voices = speechSynth.getVoices();
+        voiceSelect.innerHTML = voices.map(voice => 
+            `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`
+        ).join('');
+    }
+    
+    speechSynth.onvoiceschanged = loadVoices;
+    loadVoices();
+    
+    function speak(text) {
+        if (currentUtterance) {
+            speechSynth.cancel();
+        }
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = speechSynth.getVoices().find(voice => voice.name === voiceSelect.value);
+        utterance.rate = parseFloat(speechRate.value);
+        
+        currentUtterance = utterance;
+        speechSynth.speak(utterance);
+    }
+    
+    playBtn.addEventListener('click', function() {
+        const activeSection = document.querySelector('.content-section.active');
+        if (activeSection) {
+            speak(activeSection.textContent);
+        }
+    });
+    
+    pauseBtn.addEventListener('click', function() {
+        speechSynth.pause();
+    });
+    
+    stopBtn.addEventListener('click', function() {
+        speechSynth.cancel();
+        currentUtterance = null;
+    });
+    
+    // Notes
     const notesArea = document.getElementById('notes-area');
     const saveNotesBtn = document.getElementById('save-notes');
     const clearNotesBtn = document.getElementById('clear-notes');
     
-    // Generate a unique key for this learning material
-    const materialId = window.location.pathname.split('/').pop() || 'default';
-    const storageKey = `learning_notes_${materialId}`;
-    
-    // Load saved notes if any
-    const savedNotes = localStorage.getItem(storageKey);
+    // Load saved notes
+    const savedNotes = localStorage.getItem('learning_notes');
     if (savedNotes) {
         notesArea.value = savedNotes;
     }
     
-    // Auto-save notes every 30 seconds
-    const autoSaveInterval = setInterval(() => {
-        if (notesArea.value) {
-            localStorage.setItem(storageKey, notesArea.value);
-        }
-    }, 30000);
-    
     saveNotesBtn.addEventListener('click', function() {
-        localStorage.setItem(storageKey, notesArea.value);
-        showNotification('Success', 'Notes saved successfully!');
+        localStorage.setItem('learning_notes', notesArea.value);
+        alert('Notes saved successfully!');
     });
     
     clearNotesBtn.addEventListener('click', function() {
         if (confirm('Are you sure you want to clear your notes?')) {
             notesArea.value = '';
-            localStorage.removeItem(storageKey);
+            localStorage.removeItem('learning_notes');
         }
     });
-}
-
-/**
- * Initialize feedback system
- */
-function initFeedback() {
-    const stars = document.querySelectorAll('.feedback-stars .star');
-    const feedbackText = document.getElementById('feedback-text');
-    const submitFeedbackBtn = document.getElementById('submit-feedback');
-    let currentRating = 0;
     
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            const rating = parseInt(this.dataset.rating);
-            currentRating = rating;
-            
-            // Update star display
-            stars.forEach(s => {
-                const starRating = parseInt(s.dataset.rating);
-                s.classList.toggle('active', starRating <= rating);
-            });
-        });
-        
-        // Hover effect
-        star.addEventListener('mouseenter', function() {
-            const rating = parseInt(this.dataset.rating);
-            
-            stars.forEach(s => {
-                const starRating = parseInt(s.dataset.rating);
-                if (starRating <= rating) {
-                    s.classList.add('hover');
-                }
-            });
-        });
-        
-        star.addEventListener('mouseleave', function() {
-            stars.forEach(s => s.classList.remove('hover'));
-        });
-    });
+    // Timer
+    const timerDisplay = {
+        minutes: document.getElementById('minutes'),
+        seconds: document.getElementById('seconds')
+    };
+    const timerControls = {
+        start: document.getElementById('start-timer'),
+        pause: document.getElementById('pause-timer'),
+        reset: document.getElementById('reset-timer')
+    };
+    const timerPresets = document.querySelectorAll('.timer-presets button');
     
-    submitFeedbackBtn.addEventListener('click', function() {
-        if (currentRating === 0) {
-            showNotification('Error', 'Please select a rating before submitting feedback.', 'error');
-            return;
-        }
-        
-        // Get the CSRF token from meta tag
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
-        
-        // Send feedback to server
-        fetch('/api/feedback', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                type: 'learning_material',
-                content: {
-                    rating: currentRating,
-                    comments: feedbackText.value,
-                    material_id: window.location.pathname.split('/').pop() || 'unknown',
-                    timestamp: new Date().toISOString()
-                },
-                csrf_token: csrfToken
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Success', 'Thank you for your feedback!', 'success');
-                // Reset form
-                currentRating = 0;
-                feedbackText.value = '';
-                stars.forEach(s => s.classList.remove('active'));
-            } else {
-                showNotification('Error', 'There was an error submitting your feedback.', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error', 'There was an error submitting your feedback.', 'error');
-        });
-    });
-}
-
-/**
- * Initialize micro unit progress tracking
- */
-function initMicroUnitProgress() {
-    const completeButtons = document.querySelectorAll('.mark-complete');
+    let timerInterval;
+    let remainingSeconds = 25 * 60;
+    let isTimerRunning = false;
     
-    // Generate a unique key for this learning material
-    const materialId = window.location.pathname.split('/').pop() || 'default';
-    const storageKey = `micro_units_progress_${materialId}`;
-    
-    // Load saved progress if any
-    const savedProgress = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    
-    completeButtons.forEach((button, index) => {
-        const microUnit = button.closest('.micro-unit');
-        const unitId = `unit_${index}`;
-        
-        // Apply saved progress
-        if (savedProgress[unitId]) {
-            microUnit.classList.add('completed');
-            button.textContent = 'Completed';
-            button.classList.add('completed');
-        }
-        
-        button.addEventListener('click', function() {
-            microUnit.classList.toggle('completed');
-            
-            if (microUnit.classList.contains('completed')) {
-                button.textContent = 'Completed';
-                button.classList.add('completed');
-                savedProgress[unitId] = true;
-            } else {
-                button.textContent = 'Mark as Complete';
-                button.classList.remove('completed');
-                delete savedProgress[unitId];
-            }
-            
-            // Save progress to local storage
-            localStorage.setItem(storageKey, JSON.stringify(savedProgress));
-        });
-    });
-}
-
-/**
- * Show notification toast
- */
-function showNotification(title, message, type = 'info') {
-    // Create toast container if it doesn't exist
-    let toastContainer = document.querySelector('.toast-container');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.className = 'toast-container';
-        document.body.appendChild(toastContainer);
+    function updateTimerDisplay() {
+        const minutes = Math.floor(remainingSeconds / 60);
+        const seconds = remainingSeconds % 60;
+        timerDisplay.minutes.textContent = minutes.toString().padStart(2, '0');
+        timerDisplay.seconds.textContent = seconds.toString().padStart(2, '0');
     }
     
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.innerHTML = `
-        <strong>${title}</strong>
-        <span>${message}</span>
-    `;
+    function startTimer() {
+        if (!isTimerRunning) {
+            isTimerRunning = true;
+            timerControls.start.disabled = true;
+            timerControls.pause.disabled = false;
+            
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                updateTimerDisplay();
+                
+                if (remainingSeconds <= 0) {
+                    stopTimer();
+                    alert('Timer complete!');
+                }
+            }, 1000);
+        }
+    }
     
-    // Add to container
-    toastContainer.appendChild(toast);
+    function pauseTimer() {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        timerControls.start.disabled = false;
+        timerControls.pause.disabled = true;
+    }
     
-    // Remove after 5 seconds
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            toast.remove();
-        }, 300);
-    }, 5000);
-} 
+    function stopTimer() {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        timerControls.start.disabled = false;
+        timerControls.pause.disabled = true;
+    }
+    
+    function resetTimer() {
+        stopTimer();
+        remainingSeconds = 25 * 60;
+        updateTimerDisplay();
+    }
+    
+    timerControls.start.addEventListener('click', startTimer);
+    timerControls.pause.addEventListener('click', pauseTimer);
+    timerControls.reset.addEventListener('click', resetTimer);
+    
+    timerPresets.forEach(preset => {
+        preset.addEventListener('click', function() {
+            const minutes = parseInt(this.getAttribute('data-time'));
+            remainingSeconds = minutes * 60;
+            updateTimerDisplay();
+            stopTimer();
+            
+            // Update active preset
+            timerPresets.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+    
+    // Micro-unit interaction
+    const microUnits = document.querySelectorAll('.micro-unit');
+    const readMoreBtns = document.querySelectorAll('.read-more-btn');
+    
+    // Function to toggle micro-unit expansion
+    function toggleMicroUnit(microUnit) {
+        // Close any other expanded units
+        document.querySelectorAll('.micro-unit.expanded').forEach(unit => {
+            if (unit !== microUnit) {
+                unit.classList.remove('expanded');
+                unit.querySelector('.unit-content').classList.add('collapsed');
+            }
+        });
+        
+        // Toggle current unit
+        microUnit.classList.toggle('expanded');
+        microUnit.querySelector('.unit-content').classList.toggle('collapsed');
+        
+        // Scroll to the unit if it's expanded
+        if (microUnit.classList.contains('expanded')) {
+            microUnit.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    
+    // Add click event to micro-units
+    microUnits.forEach(microUnit => {
+        microUnit.addEventListener('click', function(e) {
+            // Don't toggle if clicking on a button or link inside the unit
+            if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || 
+                e.target.closest('button') || e.target.closest('a')) {
+                return;
+            }
+            
+            toggleMicroUnit(this);
+        });
+    });
+    
+    // Add click event to read more buttons
+    readMoreBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent the micro-unit click event
+            const microUnit = this.closest('.micro-unit');
+            toggleMicroUnit(microUnit);
+        });
+    });
+    
+    // Add click event to close buttons
+    const closeButtons = document.querySelectorAll('.close-unit-btn');
+    closeButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent the micro-unit click event
+            const microUnit = this.closest('.micro-unit');
+            if (microUnit.classList.contains('expanded')) {
+                microUnit.classList.remove('expanded');
+                microUnit.querySelector('.unit-content').classList.add('collapsed');
+            }
+        });
+    });
+    
+    // Add click event to mark complete buttons
+    const markCompleteButtons = document.querySelectorAll('.mark-complete-btn');
+    markCompleteButtons.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Prevent the micro-unit click event
+            const microUnit = this.closest('.micro-unit');
+            const completionStatus = microUnit.querySelector('.completion-status');
+            
+            // Toggle completed state
+            if (microUnit.classList.contains('completed')) {
+                microUnit.classList.remove('completed');
+                this.classList.remove('completed');
+                this.textContent = 'Mark as Complete';
+                completionStatus.textContent = 'In progress';
+            } else {
+                microUnit.classList.add('completed');
+                this.classList.add('completed');
+                this.textContent = 'Completed';
+                completionStatus.textContent = 'Completed';
+                
+                // Save completion status to localStorage
+                const unitId = microUnit.closest('.content-section').id + '-' + 
+                               microUnit.querySelector('.unit-number').textContent.replace('Unit ', '');
+                saveUnitProgress(unitId, true);
+                
+                // Check if all units in the section are completed
+                checkSectionCompletion(microUnit.closest('.content-section'));
+            }
+        });
+    });
+    
+    // Function to save unit progress to localStorage
+    function saveUnitProgress(unitId, completed) {
+        const userId = document.body.dataset.userId || 'anonymous';
+        const storageKey = `ai4fairedu_progress_${userId}`;
+        
+        let progress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        progress[unitId] = {
+            completed: completed,
+            timestamp: new Date().toISOString()
+        };
+        
+        localStorage.setItem(storageKey, JSON.stringify(progress));
+    }
+    
+    // Function to check if all units in a section are completed
+    function checkSectionCompletion(section) {
+        const totalUnits = section.querySelectorAll('.micro-unit').length;
+        const completedUnits = section.querySelectorAll('.micro-unit.completed').length;
+        
+        const sectionNav = document.querySelector(`.nav-item[data-section="${section.id.replace('section-', '')}"]`);
+        if (sectionNav) {
+            if (completedUnits === totalUnits) {
+                sectionNav.classList.add('completed');
+            } else {
+                sectionNav.classList.remove('completed');
+            }
+        }
+    }
+    
+    // Load saved progress on page load
+    function loadSavedProgress() {
+        const userId = document.body.dataset.userId || 'anonymous';
+        const storageKey = `ai4fairedu_progress_${userId}`;
+        
+        let progress = JSON.parse(localStorage.getItem(storageKey) || '{}');
+        
+        // Apply saved progress to units
+        Object.keys(progress).forEach(unitId => {
+            const [sectionId, unitNum] = unitId.split('-');
+            const section = document.getElementById(`section-${sectionId}`);
+            
+            if (section) {
+                const units = section.querySelectorAll('.micro-unit');
+                if (units[unitNum - 1] && progress[unitId].completed) {
+                    const unit = units[unitNum - 1];
+                    const completeBtn = unit.querySelector('.mark-complete-btn');
+                    const completionStatus = unit.querySelector('.completion-status');
+                    
+                    unit.classList.add('completed');
+                    if (completeBtn) {
+                        completeBtn.classList.add('completed');
+                        completeBtn.textContent = 'Completed';
+                    }
+                    if (completionStatus) {
+                        completionStatus.textContent = 'Completed';
+                    }
+                }
+            }
+        });
+        
+        // Check section completion
+        document.querySelectorAll('.content-section').forEach(section => {
+            checkSectionCompletion(section);
+        });
+    }
+    
+    // Load saved progress on page load
+    loadSavedProgress();
+}); 

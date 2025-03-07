@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Material - AI4FairEdu{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/material_processing.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Processing Your Learning Material</h1>
+    <p class="subtitle">Our AI agents are adapting your content</p>
+</section>
+
+<section class="processing-section">
+    <div class="processing-container">
+        <div class="material-info">
+            <h2>{{ material.title }}</h2>
+            <div class="material-stats">
+                <span>{{ material.word_count }} words</span>
+                <span>~{{ material.estimated_reading_time }} min read</span>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="progress-status">
+                <span class="progress-percentage">0%</span>
+                <span class="progress-message">Starting processing...</span>
+            </div>
+        </div>
+        
+        <div class="agent-activity">
+            <h3>AI Agent Activity</h3>
+            <div class="agent-cards">
+                <div class="agent-card" id="profile-analyzer-card">
+                    <div class="agent-icon">
+                        <img src="{{ url_for('static', filename='images/team/profile-analyzer.svg') }}" alt="Profile Analyzer">
+                    </div>
+                    <div class="agent-info">
+                        <h4>Profile Analyzer</h4>
+                        <p class="agent-status">Waiting...</p>
+                    </div>
+                </div>
+                
+                {% if user_analysis.difficulty_type == 'ADHD' or user_analysis.difficulty_type == 'Combined' or 'micro_content' in material.processing_options %}
+                <div class="agent-card" id="focus-enhancer-card">
+                    <div class="agent-icon">
+                        <img src="{{ url_for('static', filename='images/team/adhd-support.svg') }}" alt="Focus Enhancer">
+                    </div>
+                    <div class="agent-info">
+                        <h4>Focus Enhancer</h4>
+                        <p class="agent-status">Waiting...</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if user_analysis.difficulty_type == 'Dyslexia' or user_analysis.difficulty_type == 'Combined' or 'simplify_syntax' in material.processing_options %}
+                <div class="agent-card" id="text-transformer-card">
+                    <div class="agent-icon">
+                        <img src="{{ url_for('static', filename='images/team/dyslexia-support.svg') }}" alt="Text Transformer">
+                    </div>
+                    <div class="agent-info">
+                        <h4>Text Transformer</h4>
+                        <p class="agent-status">Waiting...</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'highlighting' in material.processing_options %}
+                <div class="agent-card" id="highlighter-card">
+                    <div class="agent-icon">
+                        <img src="{{ url_for('static', filename='images/team/highlighter.svg') }}" alt="Content Highlighter">
+                    </div>
+                    <div class="agent-info">
+                        <h4>Content Highlighter</h4>
+                        <p class="agent-status">Waiting...</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="agent-card" id="insight-generator-card">
+                    <div class="agent-icon">
+                        <img src="{{ url_for('static', filename='images/team/dashboard-analyzer.svg') }}" alt="Insight Generator">
+                    </div>
+                    <div class="agent-info">
+                        <h4>Insight Generator</h4>
+                        <p class="agent-status">Waiting...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="agent-insights" style="display: none;">
+            <h3>AI Agent Insights</h3>
+            <div class="insights-container">
+                <!-- Agent insights will be populated here -->
+            </div>
+        </div>
+        
+        <div class="processing-actions">
+            <button id="view-material" class="btn btn-primary btn-large" disabled>View Processed Material</button>
+            <button id="cancel-processing" class="btn btn-secondary">Cancel</button>
+        </div>
+    </div>
+</section>
+
+<section class="processing-explanation">
+    <h2>What's Happening Behind the Scenes</h2>
+    <div class="explanation-grid">
+        <div class="explanation-card">
+            <div class="explanation-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <h3>Profile Analysis</h3>
+            <p>Our Profile Analyzer agent is using your questionnaire responses to identify your specific learning needs.</p>
+        </div>
+        
+        <div class="explanation-card">
+            <div class="explanation-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <h3>Content Analysis</h3>
+            <p>Our AI is analyzing your learning material to understand its structure, complexity, and key concepts.</p>
+        </div>
+        
+        <div class="explanation-card">
+            <div class="explanation-icon">
+                <i class="fas fa-magic"></i>
+            </div>
+            <h3>Personalized Adaptation</h3>
+            <p>Specialized AI agents are transforming your content based on your learning profile and selected options.</p>
+        </div>
+        
+        <div class="explanation-card">
+            <div class="explanation-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <h3>Learning Optimization</h3>
+            <p>The system is generating insights and recommendations to optimize your learning experience.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const progressFill = document.querySelector('.progress-fill');
+        const progressPercentage = document.querySelector('.progress-percentage');
+        const progressMessage = document.querySelector('.progress-message');
+        const viewMaterialBtn = document.getElementById('view-material');
+        const cancelBtn = document.getElementById('cancel-processing');
+        const agentInsightsSection = document.querySelector('.agent-insights');
+        const insightsContainer = document.querySelector('.insights-container');
+        
+        // Agent status elements
+        const profileAnalyzerStatus = document.querySelector('#profile-analyzer-card .agent-status');
+        const focusEnhancerStatus = document.querySelector('#focus-enhancer-card .agent-status');
+        const textTransformerStatus = document.querySelector('#text-transformer-card .agent-status');
+        const highlighterStatus = document.querySelector('#highlighter-card .agent-status');
+        const insightGeneratorStatus = document.querySelector('#insight-generator-card .agent-status');
+        
+        // Function to update agent status based on progress
+        function updateAgentStatus(progress) {
+            // Profile Analyzer (0-20%)
+            if (progress < 20) {
+                profileAnalyzerStatus.textContent = "Analyzing user profile...";
+                profileAnalyzerStatus.classList.add('active');
+            } else {
+                profileAnalyzerStatus.textContent = "Analysis complete";
+                profileAnalyzerStatus.classList.remove('active');
+                profileAnalyzerStatus.classList.add('complete');
+            }
+            
+            // Focus Enhancer (20-40%)
+            if (focusEnhancerStatus) {
+                if (progress >= 20 && progress < 40) {
+                    focusEnhancerStatus.textContent = "Creating micro-content units...";
+                    focusEnhancerStatus.classList.add('active');
+                } else if (progress >= 40) {
+                    focusEnhancerStatus.textContent = "Processing complete";
+                    focusEnhancerStatus.classList.remove('active');
+                    focusEnhancerStatus.classList.add('complete');
+                }
+            }
+            
+            // Text Transformer (40-60%)
+            if (textTransformerStatus) {
+                if (progress >= 40 && progress < 60) {
+                    textTransformerStatus.textContent = "Simplifying text...";
+                    textTransformerStatus.classList.add('active');
+                } else if (progress >= 60) {
+                    textTransformerStatus.textContent = "Processing complete";
+                    textTransformerStatus.classList.remove('active');
+                    textTransformerStatus.classList.add('complete');
+                }
+            }
+            
+            // Highlighter (60-80%)
+            if (highlighterStatus) {
+                if (progress >= 60 && progress < 80) {
+                    highlighterStatus.textContent = "Highlighting important content...";
+                    highlighterStatus.classList.add('active');
+                } else if (progress >= 80) {
+                    highlighterStatus.textContent = "Processing complete";
+                    highlighterStatus.classList.remove('active');
+                    highlighterStatus.classList.add('complete');
+                }
+            }
+            
+            // Insight Generator (80-100%)
+            if (progress >= 80 && progress < 100) {
+                insightGeneratorStatus.textContent = "Generating insights...";
+                insightGeneratorStatus.classList.add('active');
+            } else if (progress >= 100) {
+                insightGeneratorStatus.textContent = "Processing complete";
+                insightGeneratorStatus.classList.remove('active');
+                insightGeneratorStatus.classList.add('complete');
+            }
+        }
+        
+        // Function to display agent insights
+        function displayAgentInsights(insights) {
+            if (!insights || insights.length === 0) return;
+            
+            insightsContainer.innerHTML = '';
+            insights.forEach(insight => {
+                const insightEl = document.createElement('div');
+                insightEl.className = 'insight-item';
+                insightEl.innerHTML = `
+                    <div class="insight-agent">${insight.agent}</div>
+                    <div class="insight-action">${insight.action}</div>
+                `;
+                insightsContainer.appendChild(insightEl);
+            });
+            
+            agentInsightsSection.style.display = 'block';
+        }
+        
+        // Function to check processing status
+        function checkProcessingStatus() {
+            fetch('/api/check-processing-status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        progressMessage.textContent = `Error: ${data.error}`;
+                        return;
+                    }
+                    
+                    const progress = data.progress || 0;
+                    progressFill.style.width = `${progress}%`;
+                    progressPercentage.textContent = `${progress}%`;
+                    progressMessage.textContent = data.message || 'Processing...';
+                    
+                    // Update agent status
+                    updateAgentStatus(progress);
+                    
+                    // If processing is complete
+                    if (data.status === 'complete') {
+                        viewMaterialBtn.disabled = false;
+                        cancelBtn.textContent = 'Back to Dashboard';
+                        
+                        // Display agent insights if available
+                        if (data.agent_insights) {
+                            displayAgentInsights(data.agent_insights);
+                        }
+                        
+                        // Update session with file references if available
+                        if (data.file_references) {
+                            console.log("File references received:", data.file_references);
+                        }
+                        
+                        // Stop polling
+                        clearInterval(statusInterval);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking status:', error);
+                    progressMessage.textContent = 'Error checking status';
+                });
+        }
+        
+        // Check status immediately and then every 2 seconds
+        checkProcessingStatus();
+        const statusInterval = setInterval(checkProcessingStatus, 2000);
+        
+        // View material button
+        viewMaterialBtn.addEventListener('click', function() {
+            window.location.href = '/learning-view';
+        });
+        
+        // Cancel button
+        cancelBtn.addEventListener('click', function() {
+            if (this.textContent === 'Back to Dashboard') {
+                window.location.href = '/dashboard';
+            } else {
+                // In a real implementation, you would cancel the processing job
+                clearInterval(statusInterval);
+                window.location.href = '/material-upload';
+            }
+        });
+    });
+</script>
+{% endblock %} 

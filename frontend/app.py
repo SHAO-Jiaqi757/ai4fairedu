@@ -1,9 +1,18 @@
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
-from flask_wtf.csrf import CSRFProtect
+#!/usr/bin/env python3
+"""
+Flask application for AI4FairEdu
+"""
+
 import os
 import sys
 import json
+import uuid
+import threading
+import markdown
 from datetime import datetime
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, flash
+from flask_wtf.csrf import CSRFProtect
+from werkzeug.utils import secure_filename
 
 # Add the parent directory to the path so we can import from src
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -15,20 +24,29 @@ from src.dyslexia_support import syntax_simplifier
 from src.config import SystemConfig
 from src.dashboard_analyzer import analyze_dashboard_data
 
+# Initialize configuration
+config = SystemConfig()
+
 app = Flask(__name__)
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev_key_for_testing')
+app.secret_key = config.get("app.secret_key") or "dev_key"
+app.config['UPLOAD_FOLDER'] = config.get("storage.upload_folder")
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+app.config['DEBUG'] = True  # Enable debug mode
 
 # Initialize CSRF protection
 csrf = CSRFProtect(app)
 
-# Initialize configuration
-config = SystemConfig()
-
 # Set default language in session
 @app.before_request
 def set_default_language():
+    """Set default language in session if not already set"""
     if 'language' not in session:
-        session['language'] = config.get("system.language")
+        session['language'] = config.get("system.language") or "en"
+
+# Pass debug flag to templates
+@app.context_processor
+def inject_debug():
+    return dict(debug=app.debug)
 
 @app.route('/')
 def index():
@@ -230,85 +248,281 @@ def material_upload():
 
 @app.route('/process-material', methods=['POST'])
 def process_material():
-    """Process the uploaded learning material"""
+    """Process the uploaded learning material using the AI support system workflow"""
     if 'questionnaire_answers' not in session:
         return redirect(url_for('questionnaire'))
     
     try:
-        # Get the material text
+        # Get the material text and title
         material_text = request.form.get('material_text', '')
         material_title = request.form.get('material_title', 'Untitled Material')
         
-        # Save the material
-        material_dir = os.path.join(config.get("storage.learning_materials_path"))
-        os.makedirs(material_dir, exist_ok=True)
+        print(f"Processing material: {material_title} ({len(material_text)} bytes)")
         
+        # Create a unique ID for this material
         user_id = session.get('user_id', datetime.now().strftime("%Y%m%d%H%M%S"))
         material_id = datetime.now().strftime("%Y%m%d%H%M%S")
         
-        with open(os.path.join(material_dir, f"{user_id}_{material_id}.txt"), 'w') as f:
+        # Ensure storage directories exist
+        material_dir = os.path.join(config.get("storage.learning_materials_path") or "data/materials")
+        processing_dir = os.path.join(config.get("storage.results_path") or "data/results", "processing")
+        results_dir = os.path.join(config.get("storage.results_path") or "data/results")
+        
+        os.makedirs(material_dir, exist_ok=True)
+        os.makedirs(processing_dir, exist_ok=True)
+        os.makedirs(results_dir, exist_ok=True)
+        
+        # Save the material to a file
+        material_file_path = os.path.join(material_dir, f"{user_id}_{material_id}.txt")
+        with open(material_file_path, 'w') as f:
             f.write(material_text)
         
-        # Process the material based on user's difficulty type
-        difficulty_type = session.get('user_analysis', {}).get('difficulty_type', 'Unknown')
+        # Store material metadata in session
+        session['current_material'] = {
+            'id': material_id,
+            'user_id': user_id,
+            'title': material_title,
+            'file_path': material_file_path,
+            'word_count': len(material_text.split()),
+            'estimated_reading_time': len(material_text.split()) // 200
+        }
         
-        state = {
+        # Create initial processing status file
+        processing_status_file = os.path.join(processing_dir, f"{user_id}_{material_id}_status.json")
+        with open(processing_status_file, 'w') as f:
+            json.dump({
+                "status": "started",
+                "timestamp": datetime.now().isoformat(),
+                "progress": 0
+            }, f, indent=2)
+        
+        # Get user profile data
+        user_analysis = session.get('user_analysis', {})
+        questionnaire_answers = session.get('questionnaire_answers', {})
+        
+        # Prepare initial state for the support system workflow
+        initial_state = {
             "user_profile": {
-                "questionnaire_answers": session['questionnaire_answers'],
-                "analysis": session.get('user_analysis', {})
+                "questionnaire_answers": questionnaire_answers,
+                "analysis": user_analysis
             },
             "learning_materials": {
                 "title": material_title,
                 "current_content": material_text,
                 "type": "text",
                 "difficulty_level": "intermediate",
-                "estimated_reading_time_minutes": len(material_text.split()) // 200  # Rough estimate
+                "estimated_reading_time_minutes": len(material_text.split()) // 200
             },
             "processed_content": {},
-            "current_focus": "start"
+            "interaction_history": [],
+            "current_focus": "start",
+            "metadata": {
+                "user_id": user_id,
+                "material_id": material_id,
+                "processing_status_file": processing_status_file,
+                "results_dir": results_dir
+            },
+            "iteration_count": 0
         }
         
-        # Apply appropriate processing based on difficulty type
-        if difficulty_type == "ADHD" or difficulty_type == "Combined":
-            state = micro_content_divider(state)
-            session['micro_units'] = state['processed_content'].get('micro_units', [])
+        # Import and run the support system workflow
+        from src.architecture import build_support_system
         
-        if difficulty_type == "Dyslexia" or difficulty_type == "Combined":
-            state = syntax_simplifier(state)
-            session['simplified_text'] = state['processed_content'].get('simplified_text', {})
+        # Get the workflow
+        workflow = build_support_system()
         
-        # Save the processed state
-        results_dir = os.path.join(config.get("storage.results_path"))
-        os.makedirs(results_dir, exist_ok=True)
+        # Run the workflow in a background thread to avoid blocking
+        def process_in_background():
+            try:
+                print("Building support system workflow graph")
+                # Execute the workflow
+                # The CompiledStateGraph is not directly callable, we need to use the invoke method
+                final_state = workflow.invoke(initial_state)
+                
+                # Print the raw processed content structure for debugging
+                if "processed_content" in final_state:
+                    print(f"Raw processed content from agent: {final_state['processed_content'].keys()}")
+                else:
+                    print("No processed_content in final_state")
+                
+                # Save the final results
+                results_file = os.path.join(results_dir, f"{user_id}_{material_id}_results.json")
+                with open(results_file, 'w') as f:
+                    json.dump(final_state, f, indent=2)
+                
+                print(f"Processing complete, results saved to: {results_file}")
+                
+                # Update processing status to complete
+                with open(processing_status_file, 'w') as f:
+                    json.dump({
+                        "status": "complete",
+                        "timestamp": datetime.now().isoformat(),
+                        "progress": 100,
+                        "message": "Processing complete!",
+                        "results_file": results_file
+                    }, f, indent=2)
+                
+            except Exception as e:
+                print(f"Error in background processing: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                
+                # Update status to error
+                with open(processing_status_file, 'w') as f:
+                    json.dump({
+                        "status": "error",
+                        "timestamp": datetime.now().isoformat(),
+                        "error": str(e)
+                    }, f, indent=2)
         
-        with open(os.path.join(results_dir, f"{user_id}_{material_id}_results.json"), 'w') as f:
-            # Convert to serializable format
-            serializable_state = {
-                "user_profile": state["user_profile"],
-                "learning_materials": state["learning_materials"],
-                "processed_content": state["processed_content"],
-                "current_focus": state["current_focus"]
-            }
-            json.dump(serializable_state, f, indent=2)
+        # Start background processing
+        import threading
+        processing_thread = threading.Thread(target=process_in_background)
+        processing_thread.start()
         
-        return redirect(url_for('learning_view'))
-    
+        # Redirect to processing page
+        return redirect(url_for('material_processing'))
+        
     except Exception as e:
+        print(f"Error processing material: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 400
 
 @app.route('/learning-view')
 def learning_view():
-    """Render the learning view page"""
+    """Render the learning view page with processed content"""
     if 'questionnaire_answers' not in session:
         return redirect(url_for('questionnaire'))
     
-    micro_units = session.get('micro_units', [])
-    simplified_text = session.get('simplified_text', {})
+    if 'current_material' not in session:
+        return redirect(url_for('material_upload'))
     
-    return render_template('learning_view.html', 
-                          micro_units=micro_units,
-                          simplified_text=simplified_text,
-                          difficulty_type=session.get('user_analysis', {}).get('difficulty_type', 'Unknown'))
+    # Get material info from session
+    material = session.get('current_material', {})
+    material_id = material.get('id')
+    user_id = session.get('user_id')
+    material_title = material.get('title', 'Untitled Material')
+    
+    if not material_id or not user_id:
+        flash('No material found. Please upload a new material.', 'error')
+        return redirect(url_for('material_upload'))
+    
+    # Get user profile
+    user_profile = session.get('user_analysis', {})
+    
+    # Load processed content
+    processed_content, original_content = load_processed_content(user_id, material_id)
+    
+    if not processed_content:
+        # Check if processing is still ongoing
+        processing_dir = os.path.join(config.get("storage.results_path") or "data/results", "processing")
+        status_file = os.path.join(processing_dir, f"{user_id}_{material_id}_status.json")
+        
+        if os.path.exists(status_file):
+            with open(status_file, 'r') as f:
+                status_data = json.load(f)
+                
+            if status_data.get('status') == 'processing':
+                flash('Material processing is still in progress. Please wait.', 'info')
+                return redirect(url_for('material_processing'))
+        
+        flash('Material processing is not complete or failed. Please try again.', 'error')
+        return redirect(url_for('material_processing'))
+    
+    # Debug output
+    print(f"Loaded processed content for material {material_id}:")
+    print(f"User profile: {user_profile}")
+    print(f"Processed content sections: {len(processed_content.get('sections', []))}")
+    
+    # Handle different field names in the user profile
+    if 'difficulty_type' not in user_profile and 'learning_disability' in user_profile:
+        user_profile['difficulty_type'] = user_profile['learning_disability']
+    
+    if 'support_level' not in user_profile and 'severity_level' in user_profile:
+        severity = user_profile.get('severity_level', 3)
+        if severity <= 2:
+            user_profile['support_level'] = 'minimal'
+        elif severity <= 4:
+            user_profile['support_level'] = 'moderate'
+        else:
+            user_profile['support_level'] = 'extensive'
+    
+    # Set default values if user profile is empty
+    if not user_profile or 'difficulty_type' not in user_profile:
+        # Check if we can infer from questionnaire answers
+        questionnaire_answers = session.get('questionnaire_answers', {})
+        learning_difficulties = questionnaire_answers.get('learning_difficulties', {})
+        diagnosed_conditions = learning_difficulties.get('diagnosed_conditions', [])
+        
+        if 'ADHD' in diagnosed_conditions and 'Dyslexia' in diagnosed_conditions:
+            user_profile['difficulty_type'] = 'Combined'
+        elif 'ADHD' in diagnosed_conditions:
+            user_profile['difficulty_type'] = 'ADHD'
+        elif 'Dyslexia' in diagnosed_conditions:
+            user_profile['difficulty_type'] = 'Dyslexia'
+        else:
+            user_profile['difficulty_type'] = 'Standard'
+        
+        if 'support_level' not in user_profile:
+            user_profile['support_level'] = 'moderate'
+    
+    # Get agents used from the interaction history
+    agents_used = []
+    interaction_history = processed_content.get('interaction_history', [])
+    for interaction in interaction_history:
+        if 'step' in interaction and interaction['step'] not in [agent['id'] for agent in agents_used]:
+            agent_id = interaction['step']
+            agent_name = agent_id.replace('_', ' ').title()
+            
+            # Determine agent icon and description
+            icon = 'default.svg'
+            description = 'Processed your content'
+            
+            if 'profile' in agent_id:
+                icon = 'profile-analyzer.svg'
+                description = 'Analyzed your learning profile'
+            elif 'adhd' in agent_id:
+                icon = 'adhd-support.svg'
+                description = 'Created micro-content units for better focus'
+            elif 'dyslexia' in agent_id:
+                icon = 'dyslexia-support.svg'
+                description = 'Simplified text for easier reading'
+            elif 'highlight' in agent_id:
+                icon = 'highlighter.svg'
+                description = 'Highlighted important content'
+            
+            agents_used.append({
+                'id': agent_id,
+                'name': agent_name,
+                'icon': url_for('static', filename=f'images/team/{icon}'),
+                'description': description
+            })
+    
+    # If no agents were found in the interaction history, add default agents based on user profile
+    if not agents_used:
+        if user_profile.get('difficulty_type') == 'ADHD' or user_profile.get('difficulty_type') == 'Combined':
+            agents_used.append({
+                'id': 'adhd_support',
+                'name': 'Focus Enhancer',
+                'icon': url_for('static', filename='images/team/adhd-support.svg'),
+                'description': 'Created micro-content units for better focus'
+            })
+        
+        if user_profile.get('difficulty_type') == 'Dyslexia' or user_profile.get('difficulty_type') == 'Combined':
+            agents_used.append({
+                'id': 'dyslexia_support',
+                'name': 'Text Transformer',
+                'icon': url_for('static', filename='images/team/dyslexia-support.svg'),
+                'description': 'Simplified text for easier reading'
+            })
+    
+    return render_template('learning_view.html',
+                          material_title=material_title,
+                          user_profile=user_profile,
+                          processed_content=processed_content,
+                          original_content=original_content,
+                          agents_used=agents_used)
 
 @app.route('/api/feedback', methods=['POST'])
 def submit_feedback():
@@ -382,9 +596,293 @@ def refresh_analysis():
     # Redirect to dashboard to start a new analysis
     return redirect(url_for('dashboard'))
 
+@app.route('/material-processing')
+def material_processing():
+    """Render the material processing page"""
+    if 'questionnaire_answers' not in session or 'current_material' not in session:
+        return redirect(url_for('material_upload'))
+    
+    return render_template('material_processing.html', 
+                          material=session.get('current_material', {}),
+                          user_analysis=session.get('user_analysis', {}))
+
+@app.route('/api/check-processing-status')
+def check_processing_status():
+    """API endpoint to check the status of material processing"""
+    if 'current_material' not in session:
+        return jsonify({"error": "No material being processed"})
+    
+    material = session.get('current_material', {})
+    material_id = material.get('id')
+    user_id = session.get('user_id')
+    
+    if not material_id or not user_id:
+        return jsonify({"error": "Invalid material or user ID"})
+    
+    # Check if processing status file exists
+    processing_dir = os.path.join(config.get("storage.results_path") or "data/results", "processing")
+    status_file = os.path.join(processing_dir, f"{user_id}_{material_id}_status.json")
+    
+    if not os.path.exists(status_file):
+        return jsonify({"error": "Status file not found"}), 404
+    
+    try:
+        with open(status_file, 'r') as f:
+            status_data = json.load(f)
+        
+        # If processing is complete, include agent insights and file references
+        if status_data.get('status') == 'complete':
+            results_file = status_data.get('results_file')
+            if results_file and os.path.exists(results_file):
+                with open(results_file, 'r') as f:
+                    results_data = json.load(f)
+                
+                # Extract agent insights from processing history
+                agent_insights = []
+                for entry in results_data.get('processing_history', []):
+                    if 'step' in entry and 'memory' in entry:
+                        agent_insights.append({
+                            'agent': entry.get('step', '').replace('_', ' ').title(),
+                            'action': entry.get('memory', ['No action recorded'])[0]
+                        })
+                
+                # Add agent insights to status data
+                status_data['agent_insights'] = agent_insights
+                
+                # Add file references to status data
+                status_data['file_references'] = {
+                    'micro_units_file': results_data.get('processed_content', {}).get('micro_units_file'),
+                    'simplified_text_file': results_data.get('processed_content', {}).get('simplified_text_file'),
+                    'original_content_file': results_data.get('learning_materials', {}).get('file_path')
+                }
+                
+                # Update session with file references
+                micro_units_file = results_data.get('processed_content', {}).get('micro_units_file')
+                simplified_text_file = results_data.get('processed_content', {}).get('simplified_text_file')
+                original_content_file = results_data.get('learning_materials', {}).get('file_path')
+                
+                if micro_units_file:
+                    session['micro_units_file'] = micro_units_file
+                
+                if simplified_text_file:
+                    session['simplified_text_file'] = simplified_text_file
+                
+                if original_content_file:
+                    session['original_content_file'] = original_content_file
+        
+        return jsonify(status_data)
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def convert_markdown_to_html(content):
+    """
+    Convert markdown content to HTML.
+    
+    Args:
+        content: The markdown content to convert
+        
+    Returns:
+        HTML content
+    """
+    if not content or not isinstance(content, str):
+        return content
+    
+    # Check if content is already HTML
+    if content.strip().startswith('<') and ('</p>' in content or '</div>' in content or '</h' in content):
+        return content
+    
+    # Check if content looks like markdown
+    if '**' in content or '#' in content or '- ' in content or '1. ' in content or '```' in content:
+        # Convert markdown to HTML
+        html_content = markdown.markdown(content, extensions=['extra', 'nl2br'])
+        return html_content
+    
+    # If not markdown or HTML, treat as plain text and convert paragraphs
+    html_content = ""
+    for paragraph in content.split('\n\n'):
+        if paragraph.strip():
+            html_content += f"<p>{paragraph.strip()}</p>\n"
+    return html_content
+
+def load_processed_content(user_id, material_id):
+    """
+    Load the processed content and original content for a given material.
+    
+    Args:
+        user_id: The user ID
+        material_id: The material ID
+        
+    Returns:
+        Tuple of (processed_content, original_content)
+    """
+    try:
+        # Get paths
+        results_dir = os.path.join(config.get("storage.results_path") or "data/results")
+        material_dir = os.path.join(config.get("storage.learning_materials_path") or "data/materials")
+        
+        # Load results file
+        results_file = os.path.join(results_dir, f"{user_id}_{material_id}_results.json")
+        if not os.path.exists(results_file):
+            print(f"Results file not found: {results_file}")
+            return None, None
+            
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+        
+        # Extract processed content
+        raw_processed_content = results.get("processed_content", {})
+        print(f"Raw processed content structure: {raw_processed_content.keys() if raw_processed_content else 'None'}")
+        
+        # Transform the agent output structure into the format expected by the template
+        processed_content = {}
+        
+        # Check if we have the raw agent output format (micro_units, simplified_text, etc.)
+        if "micro_units" in raw_processed_content or "simplified_text" in raw_processed_content or "general_tools_applied" in raw_processed_content:
+            # Create a sections array from the agent output
+            sections = []
+            
+            # Get material info
+            material_title = results.get("learning_materials", {}).get("title", "Content")
+            original_text = results.get("learning_materials", {}).get("current_content", "")
+            
+            # Format original text as HTML if it's not already
+            if original_text and isinstance(original_text, str):
+                original_text = convert_markdown_to_html(original_text)
+            
+            # Create a section
+            section = {
+                "id": "section-1",
+                "title": material_title,
+                "content": original_text,
+                "estimated_time": len(original_text.split()) // 200 if original_text else 5,
+                "difficulty_level": "Standard"
+            }
+            
+            # Add micro_units if available
+            if "micro_units" in raw_processed_content:
+                micro_units = raw_processed_content["micro_units"]
+                
+                # Normalize field names in micro units
+                for unit in micro_units:
+                    # Ensure estimated_time field exists
+                    if "estimated_time" not in unit and "estimated_time_minutes" in unit:
+                        unit["estimated_time"] = unit["estimated_time_minutes"]
+                    elif "estimated_time" not in unit:
+                        unit["estimated_time"] = 2  # Default value
+                    
+                    # Ensure check_points field exists
+                    if "check_points" not in unit and "key_points" in unit:
+                        unit["check_points"] = unit["key_points"]
+                    elif "check_points" not in unit and "check_questions" in unit:
+                        unit["check_points"] = unit["check_questions"]
+                    
+                    # Ensure content is HTML
+                    if "content" in unit and unit["content"] and isinstance(unit["content"], str):
+                        unit["content"] = convert_markdown_to_html(unit["content"])
+                
+                section["micro_units"] = micro_units
+                
+                # Extract key concepts from micro units if available
+                key_concepts = set()
+                for unit in micro_units:
+                    points_list = []
+                    if "key_points" in unit:
+                        points_list.extend(unit["key_points"])
+                    if "check_points" in unit:
+                        points_list.extend(unit["check_points"])
+                    
+                    for point in points_list:
+                        if isinstance(point, str):
+                            # Extract potential key concepts (capitalized terms)
+                            words = point.split()
+                            for word in words:
+                                if word and len(word) > 3 and word[0].isupper():
+                                    key_concepts.add(word.strip('.,;:()[]{}'))
+                
+                if key_concepts:
+                    section["key_concepts"] = list(key_concepts)
+            
+            # Add simplified_text if available
+            if "simplified_text" in raw_processed_content:
+                if isinstance(raw_processed_content["simplified_text"], dict):
+                    if "content" in raw_processed_content["simplified_text"]:
+                        simplified_content = raw_processed_content["simplified_text"]["content"]
+                        # Ensure content is HTML
+                        if simplified_content and isinstance(simplified_content, str):
+                            simplified_content = convert_markdown_to_html(simplified_content)
+                        section["simplified_content"] = simplified_content
+                    
+                    if "vocabulary" in raw_processed_content["simplified_text"]:
+                        section["vocabulary"] = raw_processed_content["simplified_text"]["vocabulary"]
+                else:
+                    simplified_content = raw_processed_content["simplified_text"]
+                    # Ensure content is HTML
+                    if simplified_content and isinstance(simplified_content, str):
+                        simplified_content = convert_markdown_to_html(simplified_content)
+                    section["simplified_content"] = simplified_content
+            
+            # Add the section to sections array
+            sections.append(section)
+            
+            # Create the processed content structure expected by the template
+            processed_content["sections"] = sections
+        elif "sections" in raw_processed_content:
+            # If the processed content already has a sections array, use it
+            processed_content = raw_processed_content
+        else:
+            # Create a default structure if we don't have the expected format
+            print(f"Processed content missing or invalid structure: {raw_processed_content.keys() if raw_processed_content else 'None'}")
+            
+            # Try to create a default structure if we have the original content
+            if "learning_materials" in results and "current_content" in results["learning_materials"]:
+                original_text = results["learning_materials"]["current_content"]
+                # Format original text as HTML if it's not already
+                if original_text and isinstance(original_text, str):
+                    original_text = convert_markdown_to_html(original_text)
+                
+                processed_content = {
+                    "sections": [
+                        {
+                            "id": "section-1",
+                            "title": results["learning_materials"].get("title", "Content"),
+                            "content": original_text,
+                            "estimated_time": len(original_text.split()) // 200 if original_text else 5,
+                            "difficulty_level": "Standard"
+                        }
+                    ]
+                }
+                print("Created default processed content structure")
+        
+        # Add interaction history to processed content for agent information
+        if "interaction_history" in results:
+            processed_content["interaction_history"] = results["interaction_history"]
+        
+        # Load original content
+        material_file_path = os.path.join(material_dir, f"{user_id}_{material_id}.txt")
+        if os.path.exists(material_file_path):
+            with open(material_file_path, 'r') as f:
+                original_content = f.read()
+        else:
+            # Fallback to content in results if file doesn't exist
+            original_content = results.get("learning_materials", {}).get("current_content", "")
+            print(f"Original content file not found, using fallback: {len(original_content)} bytes")
+        
+        # Format original content as HTML if it's not already
+        if original_content and isinstance(original_content, str):
+            original_content = convert_markdown_to_html(original_content)
+        
+        return processed_content, original_content
+    except Exception as e:
+        print(f"Error loading processed content: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {}, ""
+
 if __name__ == '__main__':
     # Exempt certain routes from CSRF protection (we'll handle it manually for AJAX)
     csrf.exempt(submit_feedback)
     csrf.exempt(set_language)
     
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Run the app
+    app.run(host='0.0.0.0', port=5000, debug=True)
