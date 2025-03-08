@@ -136,7 +136,7 @@
                                                 {% endfor %}
                                             {% endif %}
                                             
-                                            {% if not found_detailed and processed_content.detailed_units %}
+                                            <!-- {% if not found_detailed and processed_content.detailed_units %}
                                                 {% for detailed_unit in processed_content.detailed_units %}
                                                     {% if detailed_unit.unit_number == unit.unit_number %}
                                                         {{ detailed_unit.detailed_content | safe }}
@@ -147,7 +147,7 @@
                                             
                                             {% if not found_detailed %}
                                                 <p>No detailed content available for this unit.</p>
-                                            {% endif %}
+                                            {% endif %} -->
                                         </div>
                                         <div class="unit-progress">
                                             <button class="mark-complete-btn">Mark as Complete</button>

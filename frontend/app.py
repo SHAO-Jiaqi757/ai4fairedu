@@ -395,16 +395,41 @@ def learning_view():
     if 'questionnaire_answers' not in session:
         return redirect(url_for('questionnaire'))
     
-    if 'current_material' not in session:
-        return redirect(url_for('material_upload'))
+    # Get material_id from query string or session
+    material_id = request.args.get('material_id')
     
-    user_id = session.get('user_id', 'anonymous')
-    material_id = session.get('current_material', {}).get('id')
-    material_title = session.get('current_material', {}).get('title', 'Learning Material')
+    # If material_id is provided, use it; otherwise use the current_material from session
+    if material_id:
+        # Store the material_id in session for future use
+        if 'current_material' not in session:
+            session['current_material'] = {}
+        session['current_material']['id'] = material_id
+    elif 'current_material' not in session:
+        return redirect(url_for('material_upload'))
+    else:
+        material_id = session.get('current_material', {}).get('id')
     
     if not material_id:
         flash('No material selected. Please upload a material first.', 'warning')
         return redirect(url_for('material_upload'))
+    
+    user_id = session.get('user_id', 'anonymous')
+    
+    # Load the material title from the results file
+    results_dir = os.path.join(config.get("storage.results_path") or "data/results")
+    results_file = os.path.join(results_dir, f"{user_id}_{material_id}_results.json")
+    
+    if os.path.exists(results_file):
+        try:
+            with open(results_file, 'r') as f:
+                results = json.load(f)
+            material_title = results.get("learning_materials", {}).get("title", "Learning Material")
+            session['current_material']['title'] = material_title
+        except Exception as e:
+            print(f"Error loading results file: {str(e)}")
+            material_title = session.get('current_material', {}).get('title', 'Learning Material')
+    else:
+        material_title = session.get('current_material', {}).get('title', 'Learning Material')
     
     # Load processed content
     processed_content, original_content = load_processed_content(user_id, material_id)
@@ -885,6 +910,57 @@ def load_processed_content(user_id, material_id):
         import traceback
         traceback.print_exc()
         return None, None
+
+@app.route('/materials-history')
+def materials_history():
+    """Display the user's previously processed learning materials"""
+    user_id = session.get('user_id', 'anonymous')
+    
+    # Get paths
+    results_dir = os.path.join(config.get("storage.results_path") or "data/results")
+    
+    # Get all results files for this user
+    materials = []
+    if os.path.exists(results_dir):
+        for filename in os.listdir(results_dir):
+            if filename.startswith(f"{user_id}_") and filename.endswith("_results.json"):
+                material_id = filename.replace(f"{user_id}_", "").replace("_results.json", "")
+                
+                # Load the results file to get material info
+                results_file = os.path.join(results_dir, filename)
+                try:
+                    with open(results_file, 'r') as f:
+                        results = json.load(f)
+                    
+                    # Extract material info
+                    material_title = results.get("learning_materials", {}).get("title", "Untitled Material")
+                    processed_date = results.get("metadata", {}).get("processed_date", "Unknown date")
+                    
+                    # Format the date if it's a timestamp
+                    try:
+                        if isinstance(processed_date, (int, float)):
+                            processed_date = datetime.fromtimestamp(processed_date).strftime('%Y-%m-%d %H:%M')
+                    except:
+                        pass
+                    
+                    # Get content length
+                    content_length = len(results.get("learning_materials", {}).get("current_content", ""))
+                    
+                    # Add to materials list
+                    materials.append({
+                        "id": material_id,
+                        "title": material_title,
+                        "processed_date": processed_date,
+                        "content_length": content_length,
+                        "has_micro_units": "micro_units" in results.get("processed_content", {})
+                    })
+                except Exception as e:
+                    print(f"Error loading results file {filename}: {str(e)}")
+    
+    # Sort materials by processed date (newest first)
+    materials.sort(key=lambda x: x["processed_date"], reverse=True)
+    
+    return render_template('materials_history.html', materials=materials)
 
 if __name__ == '__main__':
     # Exempt certain routes from CSRF protection (we'll handle it manually for AJAX)

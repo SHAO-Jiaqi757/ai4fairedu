@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Learning Materials History{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/materials_history.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Your Learning Materials</h1>
+        <p class="subtitle">Access your previously processed learning materials</p>
+    </div>
+
+    <div class="materials-container">
+        {% if materials %}
+            <div class="materials-grid">
+                {% for material in materials %}
+                <div class="material-card">
+                    <div class="material-header">
+                        <h3>{{ material.title }}</h3>
+                        <span class="material-date">{{ material.processed_date }}</span>
+                    </div>
+                    <div class="material-content">
+                        <div class="material-stats">
+                            <div class="stat">
+                                <span class="stat-label">Content Length</span>
+                                <span class="stat-value">{{ material.content_length }} chars</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Micro Units</span>
+                                <span class="stat-value">{{ "Yes" if material.has_micro_units else "No" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="material-actions">
+                        <a href="{{ url_for('learning_view') }}?material_id={{ material.id }}" class="btn btn-primary">View Material</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-materials">
+                <div class="message">
+                    <i class="fas fa-book"></i>
+                    <h3>No Learning Materials Found</h3>
+                    <p>You haven't processed any learning materials yet. Upload a new material to get started.</p>
+                    <a href="{{ url_for('material_upload') }}" class="btn btn-primary">Upload Material</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 
