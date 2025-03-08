@@ -1042,8 +1042,11 @@
     border-left: 1px solid #e9ecef;
     padding: 20px;
     overflow-y: auto;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+    opacity: 1;
+    transform: translateX(0);
+    max-height: calc(100vh - 40px);
 }
 
 .tool-panel {
@@ -1052,7 +1055,18 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     margin-bottom: 20px;
     overflow: hidden;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease;
+    opacity: 1;
+    transform: translateY(0);
+    max-height: 500px;
+}
+
+.tool-panel.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+    max-height: 0;
+    margin-bottom: 0;
 }
 
 .tool-panel h3 {
@@ -1242,6 +1256,7 @@
     display: flex;
     gap: 20px;
     margin-top: 20px;
+    transition: all 0.3s ease;
 }
 
 /* Learning Sidebar */
@@ -1373,6 +1388,17 @@
     box-shadow: 0 4px 6px rgba(0,0,0,0.05);
 }
 
+.tool-btn.active {
+    background-color: #e9ecef;
+    border-color: #4a6bdf;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.tool-btn.active i {
+    color: #3a59c7;
+}
+
 .tool-btn i {
     font-size: 20px;
     margin-bottom: 8px;
@@ -1392,6 +1418,11 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.content-area.sidebar-hidden {
+    max-width: 100%;
 }
 
 .content-header {

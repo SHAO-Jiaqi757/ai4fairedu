@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}About AI4FairEdu{% endblock %}
+{% block title %}{{ t('about', 'title') }} - {{ t('base', 'site_title') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
@@ -8,46 +8,24 @@
 
 {% block content %}
 <section class="page-header">
-    <h1>About AI4FairEdu</h1>
-    <p class="subtitle">Our mission, vision, and the technology behind our learning support system</p>
+    <h1>{{ t('about', 'title') }}</h1>
+    <p class="subtitle">{{ t('about', 'subtitle') }}</p>
 </section>
 
 <section class="about-section">
     <div class="about-content">
-        <h2>Our Mission</h2>
-        <p>AI4FairEdu is dedicated to creating an inclusive learning environment where students with learning disabilities, particularly ADHD and dyslexia, can thrive academically. We believe that every student deserves access to personalized learning tools that address their unique challenges and amplify their strengths.</p>
+        <h2>{{ t('about', 'mission_title') }}</h2>
+        <p>{{ t('about', 'mission_text') }}</p>
         
-        <h2>The Problem We're Solving</h2>
-        <p>Traditional educational materials and approaches often fail to accommodate the diverse learning needs of students with ADHD and dyslexia. These students face significant barriers to academic success, including:</p>
-        
-        <div class="problem-cards">
-            <div class="problem-card">
-                <h3>For Students with ADHD</h3>
-                <ul>
-                    <li>Difficulty maintaining focus on lengthy or complex materials</li>
-                    <li>Challenges with time management and task prioritization</li>
-                    <li>Inconsistent engagement with learning content</li>
-                    <li>Struggles with organizing information and study materials</li>
-                </ul>
-            </div>
-            
-            <div class="problem-card">
-                <h3>For Students with Dyslexia</h3>
-                <ul>
-                    <li>Slow reading speed and comprehension difficulties</li>
-                    <li>Challenges with complex vocabulary and sentence structures</li>
-                    <li>Visual processing issues with standard text formats</li>
-                    <li>Difficulties with spelling and written expression</li>
-                </ul>
-            </div>
-        </div>
+        <h2>{{ t('about', 'vision_title') }}</h2>
+        <p>{{ t('about', 'vision_text') }}</p>
     </div>
 </section>
 
 <section class="about-section alt-bg">
     <div class="about-content">
-        <h2>Our Solution</h2>
-        <p>AI4FairEdu leverages artificial intelligence to transform standard learning materials into personalized, accessible formats that address the specific needs of students with ADHD and dyslexia.</p>
+        <h2>{{ t('about', 'how_it_works_title') }}</h2>
+        <p>{{ t('about', 'how_it_works_text') }}</p>
         
         <div class="solution-features">
             <div class="solution-feature">
@@ -55,8 +33,8 @@
                     <i class="fas fa-user-check"></i>
                 </div>
                 <div class="feature-content">
-                    <h3>Personalized User Profiling</h3>
-                    <p>Our system analyzes each user's learning profile through a comprehensive questionnaire, identifying specific challenges, strengths, and preferences.</p>
+                    <h3>{{ t('about', 'feature1_title') }}</h3>
+                    <p>{{ t('about', 'feature1_text') }}</p>
                 </div>
             </div>
             
@@ -65,8 +43,8 @@
                     <i class="fas fa-brain"></i>
                 </div>
                 <div class="feature-content">
-                    <h3>ADHD Support Features</h3>
-                    <p>For students with attention challenges, we provide micro-content segmentation, progressive complexity adjustment, time awareness prompts, and visual engagement enhancements.</p>
+                    <h3>{{ t('about', 'feature2_title') }}</h3>
+                    <p>{{ t('about', 'feature2_text') }}</p>
                 </div>
             </div>
             
@@ -75,8 +53,8 @@
                     <i class="fas fa-book-reader"></i>
                 </div>
                 <div class="feature-content">
-                    <h3>Dyslexia Support Features</h3>
-                    <p>For students with reading difficulties, we offer syntax simplification, vocabulary substitution, text-to-speech integration, and dyslexia-friendly formatting options.</p>
+                    <h3>{{ t('about', 'feature3_title') }}</h3>
+                    <p>{{ t('about', 'feature3_text') }}</p>
                 </div>
             </div>
             
@@ -85,8 +63,8 @@
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="feature-content">
-                    <h3>Adaptive Learning</h3>
-                    <p>Our system continuously learns from user interactions and feedback to improve the personalization and effectiveness of its support features.</p>
+                    <h3>{{ t('about', 'feature4_title') }}</h3>
+                    <p>{{ t('about', 'feature4_text') }}</p>
                 </div>
             </div>
         </div>
@@ -95,28 +73,44 @@
 
 <section class="about-section">
     <div class="about-content">
-        <h2>Our Technology</h2>
-        <p>AI4FairEdu is built on a foundation of cutting-edge AI technologies and educational research:</p>
+        <h2>{{ t('about', 'team_title') }}</h2>
+        <p>{{ t('about', 'team_text') }}</p>
         
-        <div class="tech-stack">
-            <div class="tech-item">
-                <h3>Large Language Models</h3>
-                <p>We utilize state-of-the-art language models to analyze and transform learning materials, ensuring high-quality content adaptation while preserving educational value.</p>
+        <div class="team-grid">
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/profile-analyzer.svg') }}" alt="Profile Analyzer AI agent">
+                </div>
+                <h3>{{ t('about', 'team_member1_title') }}</h3>
+                <p class="member-title">{{ t('about', 'team_member1_role') }}</p>
+                <p class="member-bio">{{ t('about', 'team_member1_bio') }}</p>
             </div>
             
-            <div class="tech-item">
-                <h3>Cognitive Science Research</h3>
-                <p>Our approach is informed by the latest research in cognitive science, educational psychology, and learning disabilities, ensuring evidence-based interventions.</p>
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/adhd-support.svg') }}" alt="ADHD Support AI agent">
+                </div>
+                <h3>{{ t('about', 'team_member2_title') }}</h3>
+                <p class="member-title">{{ t('about', 'team_member2_role') }}</p>
+                <p class="member-bio">{{ t('about', 'team_member2_bio') }}</p>
             </div>
             
-            <div class="tech-item">
-                <h3>Modular Architecture</h3>
-                <p>Our system features a flexible, modular design that allows for continuous improvement and the addition of new support features as research and technology evolve.</p>
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/dyslexia-support.svg') }}" alt="Dyslexia Support AI agent">
+                </div>
+                <h3>{{ t('about', 'team_member3_title') }}</h3>
+                <p class="member-title">{{ t('about', 'team_member3_role') }}</p>
+                <p class="member-bio">{{ t('about', 'team_member3_bio') }}</p>
             </div>
             
-            <div class="tech-item">
-                <h3>User-Centered Design</h3>
-                <p>We prioritize accessibility, usability, and user experience in every aspect of our system, ensuring that it meets the real-world needs of students with learning disabilities.</p>
+            <div class="team-member">
+                <div class="member-photo">
+                    <img src="{{ url_for('static', filename='images/team/dashboard-analyzer.svg') }}" alt="Dashboard Analyzer AI agent">
+                </div>
+                <h3>{{ t('about', 'team_member4_title') }}</h3>
+                <p class="member-title">{{ t('about', 'team_member4_role') }}</p>
+                <p class="member-bio">{{ t('about', 'team_member4_bio') }}</p>
             </div>
         </div>
     </div>
@@ -124,54 +118,17 @@
 
 <section class="about-section alt-bg">
     <div class="about-content">
-        <h2>Our AI Team</h2>
-        <p>AI4FairEdu is powered by a suite of specialized AI agents working together to create personalized learning experiences for students with learning disabilities.</p>
-        
-        <div class="team-grid">
-            <div class="team-member">
-                <div class="member-photo">
-                    <img src="{{ url_for('static', filename='images/team/profile-analyzer.svg') }}" alt="Profile Analyzer AI agent">
-                </div>
-                <h3>Profile Analyzer</h3>
-                <p class="member-title">Learning Profile Specialist</p>
-                <p class="member-bio">Analyzes questionnaire responses to identify learning disability characteristics and creates personalized user profiles based on DSM-5 criteria.</p>
-            </div>
-            
-            <div class="team-member">
-                <div class="member-photo">
-                    <img src="{{ url_for('static', filename='images/team/adhd-support.svg') }}" alt="ADHD Support AI agent">
-                </div>
-                <h3>Focus Enhancer</h3>
-                <p class="member-title">ADHD Support Specialist</p>
-                <p class="member-bio">Transforms learning materials into micro-content segments with progressive complexity adjustment to maintain attention and engagement.</p>
-            </div>
-            
-            <div class="team-member">
-                <div class="member-photo">
-                    <img src="{{ url_for('static', filename='images/team/dyslexia-support.svg') }}" alt="Dyslexia Support AI agent">
-                </div>
-                <h3>Text Transformer</h3>
-                <p class="member-title">Dyslexia Support Specialist</p>
-                <p class="member-bio">Simplifies complex syntax and substitutes difficult vocabulary while preserving educational content for improved reading comprehension.</p>
-            </div>
-            
-            <div class="team-member">
-                <div class="member-photo">
-                    <img src="{{ url_for('static', filename='images/team/dashboard-analyzer.svg') }}" alt="Dashboard Analyzer AI agent">
-                </div>
-                <h3>Insight Generator</h3>
-                <p class="member-title">Learning Analytics Expert</p>
-                <p class="member-bio">Analyzes learning patterns and progress to provide actionable insights and personalized recommendations for continuous improvement.</p>
-            </div>
-        </div>
+        <h2>{{ t('about', 'contact_title') }}</h2>
+        <p>{{ t('about', 'contact_text') }}</p>
+        <p>{{ t('about', 'contact_email') }}</p>
     </div>
 </section>
 
 <section class="cta">
     <div class="cta-content">
-        <h2>Join Us in Making Education Accessible for All</h2>
-        <p>Experience the power of personalized learning support designed for your unique needs.</p>
-        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">Get Started Now</a>
+        <h2>{{ t('about', 'join_cta_title') }}</h2>
+        <p>{{ t('about', 'join_cta_text') }}</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">{{ t('home', 'get_started') }}</a>
     </div>
 </section>
 {% endblock %} 

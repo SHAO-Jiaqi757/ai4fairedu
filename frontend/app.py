@@ -23,6 +23,7 @@ from src.adhd_support import micro_content_divider
 from src.dyslexia_support import syntax_simplifier
 from src.config import SystemConfig
 from src.dashboard_analyzer import analyze_dashboard_data
+from translations import get_translation
 
 # Initialize configuration
 config = SystemConfig()
@@ -48,20 +49,31 @@ def set_default_language():
 def inject_debug():
     return dict(debug=app.debug)
 
+# Add translation function to Jinja2 templates
+@app.context_processor
+def inject_translation_function():
+    """Make translation function available in templates"""
+    def translate(section, key):
+        return get_translation(section, key, session.get('language', 'en'))
+    return dict(t=translate)
+
 @app.route('/')
 def index():
-    """Render the landing page"""
-    return render_template('index.html')
+    """Render the home page"""
+    language = session.get('language', config.get("system.language"))
+    return render_template('index.html', language=language)
 
 @app.route('/about')
 def about():
     """Render the about page"""
-    return render_template('about.html')
+    language = session.get('language', config.get("system.language"))
+    return render_template('about.html', language=language)
 
 @app.route('/questionnaire')
 def questionnaire():
-    """Render the user questionnaire page"""
-    return render_template('questionnaire.html')
+    """Render the questionnaire page"""
+    language = session.get('language', config.get("system.language"))
+    return render_template('questionnaire.html', language=language)
 
 @app.route('/submit-questionnaire', methods=['POST'])
 def submit_questionnaire():
@@ -155,8 +167,35 @@ def dashboard():
     # Get language setting
     language = session.get('language', config.get("system.language"))
     
-    # Check if analysis is already in progress or completed
+    # Get user ID
     user_id = session.get('user_id', 'anonymous')
+    
+    # Check if we already have analysis results in the session
+    if 'dashboard_analysis' in session:
+        dashboard_data = session['dashboard_analysis']
+        analysis = dashboard_data.get('analysis', {})
+        strategies = dashboard_data.get('strategies', {'primary': [], 'secondary': []})
+        
+        return render_template('dashboard.html', 
+                              analysis=analysis,
+                              strategies=strategies,
+                              language=language)
+    
+    # Try to get analysis from the database-like structure
+    dashboard_data = config.get_user_analysis(user_id, language)
+    if dashboard_data:
+        # Store in session for future use
+        session['dashboard_analysis'] = dashboard_data
+        
+        analysis = dashboard_data.get('analysis', {})
+        strategies = dashboard_data.get('strategies', {'primary': [], 'secondary': []})
+        
+        return render_template('dashboard.html', 
+                              analysis=analysis,
+                              strategies=strategies,
+                              language=language)
+    
+    # Check if analysis is already in progress or completed
     analysis_dir = os.path.join(config.get("storage.results_path"), "analysis")
     analysis_file = os.path.join(analysis_dir, f"{user_id}_dashboard_analysis.json")
     analysis_in_progress_file = os.path.join(analysis_dir, f"{user_id}_analysis_in_progress")
@@ -169,55 +208,69 @@ def dashboard():
             
             # Store in session and remove the file
             session['dashboard_analysis'] = dashboard_data
+            
+            # Save to the database-like structure
+            config.save_user_analysis(user_id, dashboard_data, language)
+            
+            # Remove the file (now that it's in the database)
             os.remove(analysis_file)
+            
+            analysis = dashboard_data.get('analysis', {})
+            strategies = dashboard_data.get('strategies', {'primary': [], 'secondary': []})
+            
+            return render_template('dashboard.html', 
+                                  analysis=analysis,
+                                  strategies=strategies,
+                                  language=language)
         except Exception as e:
             print(f"Error loading analysis file: {e}")
     
-    # Check if we already have analysis results in the session
-    if 'dashboard_analysis' not in session:
-        # If analysis is not already in progress, start it
-        if not os.path.exists(analysis_in_progress_file):
-            # Create a file to indicate analysis is in progress
-            os.makedirs(analysis_dir, exist_ok=True)
-            with open(analysis_in_progress_file, 'w') as f:
-                f.write(datetime.now().isoformat())
-            
-            # Save questionnaire data to a file for the background process to use
-            questionnaire_data = session['questionnaire_answers']
-            with open(os.path.join(analysis_dir, f"{user_id}_questionnaire.json"), 'w') as f:
-                json.dump(questionnaire_data, f, indent=2)
-            
-            # Start the analysis process using a separate script
-            import subprocess
-            script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'run_analysis.py')
-            subprocess.Popen([
-                sys.executable, 
-                script_path, 
-                '--user_id', user_id,
-                '--language', language
-            ])
+    # Check if analysis is not already in progress, start it
+    if not os.path.exists(analysis_in_progress_file):
+        # Create a file to indicate analysis is in progress
+        os.makedirs(analysis_dir, exist_ok=True)
+        with open(analysis_in_progress_file, 'w') as f:
+            f.write(datetime.now().isoformat())
         
-        # Return a template with placeholder data
-        return render_template('dashboard.html',
-                              analysis={"difficulty_type": "Analysis Pending"},
-                              strategies={"primary": [], "secondary": []})
+        # Save questionnaire data to a file for the background process to use
+        questionnaire_data = session['questionnaire_answers']
+        with open(os.path.join(analysis_dir, f"{user_id}_questionnaire.json"), 'w') as f:
+            json.dump(questionnaire_data, f, indent=2)
+        
+        # Start the analysis process using a separate script
+        import subprocess
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'run_analysis.py')
+        subprocess.Popen([
+            sys.executable, 
+            script_path, 
+            '--user_id', user_id,
+            '--language', language
+        ])
     
-    # Get the analysis and strategies from the session
-    dashboard_data = session['dashboard_analysis']
-    analysis = dashboard_data.get('analysis', {})
-    strategies = dashboard_data.get('strategies', {'primary': [], 'secondary': []})
-    
-    return render_template('dashboard.html', 
-                          analysis=analysis,
-                          strategies=strategies)
+    # Return a template with placeholder data
+    return render_template('dashboard.html',
+                          analysis={"difficulty_type": "Analysis Pending"},
+                          strategies={"primary": [], "secondary": []},
+                          language=language)
 
 @app.route('/check-analysis')
 def check_analysis():
-    """Check if the analysis is complete and update the session"""
-    if 'user_id' not in session:
-        return jsonify({"complete": False})
+    """Check if the dashboard analysis is complete"""
+    user_id = session.get('user_id', 'anonymous')
+    language = session.get('language', config.get("system.language"))
     
-    user_id = session.get('user_id')
+    # Check if analysis is already in session
+    if 'dashboard_analysis' in session:
+        return jsonify({"complete": True})
+    
+    # Check if analysis is in the database
+    dashboard_data = config.get_user_analysis(user_id, language)
+    if dashboard_data:
+        # Store in session for future use
+        session['dashboard_analysis'] = dashboard_data
+        return jsonify({"complete": True})
+    
+    # Check if analysis file exists
     analysis_dir = os.path.join(config.get("storage.results_path"), "analysis")
     analysis_file = os.path.join(analysis_dir, f"{user_id}_dashboard_analysis.json")
     
@@ -229,12 +282,33 @@ def check_analysis():
             # Store in session
             session['dashboard_analysis'] = dashboard_data
             
-            # Remove the file
+            # Save to the database-like structure
+            config.save_user_analysis(user_id, dashboard_data, language)
+            
+            # Remove the file (now that it's in the database)
             os.remove(analysis_file)
             
             return jsonify({"complete": True})
         except Exception as e:
-            return jsonify({"complete": False, "error": str(e)})
+            print(f"Error loading analysis file: {e}")
+    
+    # Check if analysis is in progress
+    analysis_in_progress_file = os.path.join(analysis_dir, f"{user_id}_analysis_in_progress")
+    
+    if os.path.exists(analysis_in_progress_file):
+        # Check if the analysis has been running for too long (more than 5 minutes)
+        try:
+            with open(analysis_in_progress_file, 'r') as f:
+                start_time = datetime.fromisoformat(f.read().strip())
+            
+            if (datetime.now() - start_time).total_seconds() > 300:
+                # Analysis has been running for too long, consider it failed
+                os.remove(analysis_in_progress_file)
+                return jsonify({"complete": False, "error": "Analysis timed out"})
+        except Exception:
+            pass
+        
+        return jsonify({"complete": False, "in_progress": True})
     
     return jsonify({"complete": False})
 
@@ -244,7 +318,8 @@ def material_upload():
     if 'questionnaire_answers' not in session:
         return redirect(url_for('questionnaire'))
     
-    return render_template('material_upload.html')
+    language = session.get('language', config.get("system.language"))
+    return render_template('material_upload.html', language=language)
 
 @app.route('/process-material', methods=['POST'])
 def process_material():
@@ -593,9 +668,8 @@ def set_language():
         # Update system config
         config.update("system.language", language)
         
-        # Clear any existing dashboard analysis to regenerate in the new language
-        if 'dashboard_analysis' in session:
-            session.pop('dashboard_analysis')
+        # We no longer clear dashboard_analysis from session
+        # This allows us to keep using the existing analysis when changing language
         
         return jsonify({"success": True})
     
@@ -604,15 +678,42 @@ def set_language():
 
 @app.route('/refresh-analysis')
 def refresh_analysis():
-    """Manually trigger a new analysis"""
-    if 'questionnaire_answers' not in session:
-        return redirect(url_for('questionnaire'))
-    
+    """Force a refresh of the dashboard analysis"""
     # Clear any existing analysis results
     if 'dashboard_analysis' in session:
         session.pop('dashboard_analysis')
     
-    # Redirect to dashboard to start a new analysis
+    # Get user ID and language
+    user_id = session.get('user_id', 'anonymous')
+    language = session.get('language', config.get("system.language"))
+    
+    # Set up paths
+    analysis_dir = os.path.join(config.get("storage.results_path"), "analysis")
+    analysis_in_progress_file = os.path.join(analysis_dir, f"{user_id}_analysis_in_progress")
+    
+    # If analysis is not already in progress, start it
+    if not os.path.exists(analysis_in_progress_file):
+        # Create a file to indicate analysis is in progress
+        os.makedirs(analysis_dir, exist_ok=True)
+        with open(analysis_in_progress_file, 'w') as f:
+            f.write(datetime.now().isoformat())
+        
+        # Save questionnaire data to a file for the background process to use
+        questionnaire_data = session.get('questionnaire_answers', {})
+        with open(os.path.join(analysis_dir, f"{user_id}_questionnaire.json"), 'w') as f:
+            json.dump(questionnaire_data, f, indent=2)
+        
+        # Start the analysis process using a separate script
+        import subprocess
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'run_analysis.py')
+        subprocess.Popen([
+            sys.executable, 
+            script_path, 
+            '--user_id', user_id,
+            '--language', language
+        ])
+    
+    # Redirect back to the dashboard
     return redirect(url_for('dashboard'))
 
 @app.route('/material-processing')
@@ -915,6 +1016,7 @@ def load_processed_content(user_id, material_id):
 def materials_history():
     """Display the user's previously processed learning materials"""
     user_id = session.get('user_id', 'anonymous')
+    language = session.get('language', config.get("system.language"))
     
     # Get paths
     results_dir = os.path.join(config.get("storage.results_path") or "data/results")
@@ -946,21 +1048,29 @@ def materials_history():
                     # Get content length
                     content_length = len(results.get("learning_materials", {}).get("current_content", ""))
                     
+                    # Check if it has micro units
+                    has_micro_units = False
+                    if results.get("processed_content", {}).get("sections"):
+                        for section in results["processed_content"]["sections"]:
+                            if section.get("micro_units"):
+                                has_micro_units = True
+                                break
+                    
                     # Add to materials list
                     materials.append({
                         "id": material_id,
                         "title": material_title,
                         "processed_date": processed_date,
                         "content_length": content_length,
-                        "has_micro_units": "micro_units" in results.get("processed_content", {})
+                        "has_micro_units": has_micro_units
                     })
                 except Exception as e:
-                    print(f"Error loading results file {filename}: {str(e)}")
+                    print(f"Error loading results file {results_file}: {e}")
     
-    # Sort materials by processed date (newest first)
+    # Sort materials by date (newest first)
     materials.sort(key=lambda x: x["processed_date"], reverse=True)
     
-    return render_template('materials_history.html', materials=materials)
+    return render_template('materials_history.html', materials=materials, language=language)
 
 if __name__ == '__main__':
     # Exempt certain routes from CSRF protection (we'll handle it manually for AJAX)

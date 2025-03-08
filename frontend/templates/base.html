@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ session.get('language', 'en') }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() if csrf_token else '' }}">
-    <title>{% block title %}AI4FairEdu - Learning Support System{% endblock %}</title>
+    <title>{% block title %}{{ t('base', 'site_title') }} - Learning Support System{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -17,27 +17,27 @@
         <div class="container">
             <div class="logo">
                 <a href="{{ url_for('index') }}">
-                    <span class="logo-text">AI4FairEdu</span>
+                    <span class="logo-text">{{ t('base', 'site_title') }}</span>
                 </a>
             </div>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="{{ url_for('index') }}" class="{% if request.path == url_for('index') %}active{% endif %}">Home</a></li>
-                    <li><a href="{{ url_for('about') }}" class="{% if request.path == url_for('about') %}active{% endif %}">About</a></li>
-                    <li><a href="{{ url_for('questionnaire') }}" class="{% if request.path == url_for('questionnaire') %}active{% endif %}">Questionnaire</a></li>
+                    <li><a href="{{ url_for('index') }}" class="{% if request.path == url_for('index') %}active{% endif %}">{{ t('base', 'home') }}</a></li>
+                    <li><a href="{{ url_for('about') }}" class="{% if request.path == url_for('about') %}active{% endif %}">{{ t('base', 'about') }}</a></li>
+                    <li><a href="{{ url_for('questionnaire') }}" class="{% if request.path == url_for('questionnaire') %}active{% endif %}">{{ t('base', 'questionnaire') }}</a></li>
                     {% if 'questionnaire_answers' in session %}
-                    <li><a href="{{ url_for('dashboard') }}" class="{% if request.path == url_for('dashboard') %}active{% endif %}">Dashboard</a></li>
-                    <li><a href="{{ url_for('material_upload') }}" class="{% if request.path == url_for('material_upload') %}active{% endif %}">Upload Material</a></li>
+                    <li><a href="{{ url_for('dashboard') }}" class="{% if request.path == url_for('dashboard') %}active{% endif %}">{{ t('base', 'dashboard') }}</a></li>
+                    <li><a href="{{ url_for('material_upload') }}" class="{% if request.path == url_for('material_upload') %}active{% endif %}">{{ t('base', 'materials') }}</a></li>
                     {% endif %}
                 </ul>
             </nav>
             <div class="accessibility-controls">
-                <button id="font-size-increase" title="Increase Font Size"><i class="fas fa-plus"></i></button>
-                <button id="font-size-decrease" title="Decrease Font Size"><i class="fas fa-minus"></i></button>
-                <button id="toggle-dyslexic-font" title="Toggle Dyslexic-friendly Font"><i class="fas fa-font"></i></button>
-                <button id="toggle-high-contrast" title="Toggle High Contrast"><i class="fas fa-adjust"></i></button>
+                <button id="font-size-increase" title="{{ t('base', 'increase_font') }}"><i class="fas fa-plus"></i></button>
+                <button id="font-size-decrease" title="{{ t('base', 'decrease_font') }}"><i class="fas fa-minus"></i></button>
+                <button id="toggle-dyslexic-font" title="{{ t('base', 'toggle_dyslexic') }}"><i class="fas fa-font"></i></button>
+                <button id="toggle-high-contrast" title="{{ t('base', 'toggle_contrast') }}"><i class="fas fa-adjust"></i></button>
                 <div class="language-switcher">
-                    <select id="language-select" title="Change Language">
+                    <select id="language-select" title="{{ t('base', 'change_language') }}">
                         <option value="en" {% if session.get('language') == 'en' %}selected{% endif %}>English</option>
                         <option value="zh" {% if session.get('language') == 'zh' %}selected{% endif %}>中文</option>
                     </select>
@@ -66,19 +66,19 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h3>AI4FairEdu</h3>
+                    <h3>{{ t('base', 'site_title') }}</h3>
                     <p>A learning support system for students with ADHD and dyslexia.</p>
                 </div>
                 <div class="footer-section">
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="{{ url_for('index') }}">Home</a></li>
-                        <li><a href="{{ url_for('about') }}">About</a></li>
-                        <li><a href="{{ url_for('questionnaire') }}">Questionnaire</a></li>
+                        <li><a href="{{ url_for('index') }}">{{ t('base', 'home') }}</a></li>
+                        <li><a href="{{ url_for('about') }}">{{ t('base', 'about') }}</a></li>
+                        <li><a href="{{ url_for('questionnaire') }}">{{ t('base', 'questionnaire') }}</a></li>
                     </ul>
                 </div>
                 <div class="footer-section">
-                    <h3>Contact</h3>
+                    <h3>{{ t('base', 'contact') }}</h3>
                     <p>Email: contact@ai4fairedu.org</p>
                     <p>GitHub: <a href="https://github.com/username/ai4fairedu" target="_blank">github.com/username/ai4fairedu</a></p>
                 </div>

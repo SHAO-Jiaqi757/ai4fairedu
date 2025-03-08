@@ -35,9 +35,12 @@ def run_analysis(user_id: str, language: str = "en") -> None:
         # Run the analysis
         dashboard_data = analyze_dashboard_data(questionnaire_data, language)
         
-        # Save the results
+        # Save the results to the file (for backward compatibility)
         with open(analysis_file, 'w') as f:
             json.dump(dashboard_data, f, indent=2)
+        
+        # Save the results to the database-like structure
+        config.save_user_analysis(user_id, dashboard_data, language)
         
         # Clean up
         if os.path.exists(questionnaire_file):

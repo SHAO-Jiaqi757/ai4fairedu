@@ -245,15 +245,116 @@ document.addEventListener('DOMContentLoaded', function() {
     // Tool Buttons
     const toolButtons = document.querySelectorAll('.tool-btn');
     const toolPanels = document.querySelectorAll('.tool-panel');
+    const toolsSidebar = document.querySelector('.tools-sidebar');
+    const contentArea = document.querySelector('.content-area');
     
+    // Track active tools
+    const activeTools = new Set();
+    
+    // Function to toggle a specific tool panel
+    function toggleToolPanel(toolName) {
+        console.log(`Toggling tool panel: ${toolName}`);
+        const panel = document.getElementById(`${toolName}-panel`);
+        
+        if (!panel) return;
+        
+        // Check if this tool is already active
+        if (activeTools.has(toolName)) {
+            // Deactivate this tool
+            activeTools.delete(toolName);
+            
+            // Hide this panel with a transition
+            panel.classList.add('hidden');
+            setTimeout(() => {
+                panel.style.display = 'none';
+            }, 300);
+            
+            // Update button state
+            const button = document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
+            if (button) {
+                button.classList.remove('active');
+            }
+            
+            // If no tools are active, hide the sidebar
+            if (activeTools.size === 0) {
+                hideSidebar();
+            }
+        } else {
+            // Activate this tool
+            activeTools.add(toolName);
+            
+            // Show the sidebar if it's hidden
+            showSidebar();
+            
+            // Show this panel
+            panel.style.display = 'block';
+            setTimeout(() => {
+                panel.classList.remove('hidden');
+            }, 10);
+            
+            // Update button state
+            const button = document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
+            if (button) {
+                button.classList.add('active');
+            }
+        }
+    }
+    
+    // Function to show the sidebar
+    function showSidebar() {
+        if (!toolsSidebar) return;
+        
+        // Show the sidebar
+        toolsSidebar.style.display = 'block';
+        setTimeout(() => {
+            toolsSidebar.style.opacity = '1';
+            toolsSidebar.style.transform = 'translateX(0)';
+        }, 10);
+        
+        // Update content area
+        if (contentArea) {
+            contentArea.classList.remove('sidebar-hidden');
+        }
+    }
+    
+    // Function to hide the sidebar
+    function hideSidebar() {
+        if (!toolsSidebar) return;
+        
+        // Hide the sidebar with a transition
+        toolsSidebar.style.opacity = '0';
+        toolsSidebar.style.transform = 'translateX(20px)';
+        setTimeout(() => {
+            toolsSidebar.style.display = 'none';
+        }, 300);
+        
+        // Update content area
+        if (contentArea) {
+            contentArea.classList.add('sidebar-hidden');
+        }
+    }
+    
+    // Hide all tool panels and sidebar initially
+    toolPanels.forEach(panel => {
+        panel.classList.add('hidden');
+        panel.style.display = 'none';
+    });
+    
+    // Hide the sidebar initially
+    if (toolsSidebar) {
+        toolsSidebar.style.display = 'none';
+        
+        // Add a class to the content area to indicate sidebar is hidden
+        if (contentArea) {
+            contentArea.classList.add('sidebar-hidden');
+        }
+    }
+    
+    // Add click event listeners to tool buttons
     toolButtons.forEach(button => {
         button.addEventListener('click', function() {
             const tool = this.getAttribute('data-tool');
-            const panel = document.getElementById(`${tool}-panel`);
-            
-            // Toggle active state
-            this.classList.toggle('active');
-            panel.classList.toggle('active');
+            toggleToolPanel(tool);
         });
     });
     

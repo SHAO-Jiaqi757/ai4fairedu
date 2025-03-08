@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Your Learning Dashboard - AI4FairEdu{% endblock %}
+{% block title %}{{ t('dashboard', 'title') }} - AI4FairEdu{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
@@ -8,48 +8,48 @@
 
 {% block content %}
 <section class="page-header">
-    <h1>Your Learning Dashboard</h1>
-    <p class="subtitle">Personalized insights and support strategies based on your profile</p>
+    <h1>{{ t('dashboard', 'title') }}</h1>
+    <p class="subtitle">{{ t('dashboard', 'subtitle') }}</p>
 </section>
 
 <!-- Loading indicator -->
 <div id="loading-overlay" class="loading-overlay" style="display: none;">
     <div class="loading-spinner"></div>
-    <p>Analyzing your profile...</p>
-    <a href="{{ url_for('refresh_analysis') }}" class="btn btn-primary mt-3">Refresh Analysis</a>
+    <p>{{ t('dashboard', 'loading') }}</p>
+    <a href="{{ url_for('refresh_analysis') }}" class="btn btn-primary mt-3">{{ t('dashboard', 'refresh_analysis') }}</a>
 </div>
 
 <section class="dashboard-section">
     <div class="dashboard-grid">
         <div class="dashboard-card profile-summary">
             <div class="card-header">
-                <h2>Your Learning Profile</h2>
+                <h2>{{ t('dashboard', 'profile_summary') }}</h2>
             </div>
             <div class="card-content">
                 <div class="profile-type">
-                    <h3>Learning Difficulty Type</h3>
+                    <h3>{{ t('dashboard', 'difficulty_type') }}</h3>
                     <div class="difficulty-badge {% if analysis.difficulty_type == 'ADHD' %}adhd{% elif analysis.difficulty_type == 'Dyslexia' %}dyslexia{% elif analysis.difficulty_type == 'Combined' %}combined{% else %}unknown{% endif %}">
-                        {{ analysis.difficulty_type|default('Analysis Pending') }}
+                        {{ analysis.difficulty_type|default(t('dashboard', 'analysis_pending')) }}
                     </div>
                 </div>
                 
                 <div class="severity-meter">
-                    <h3>Severity Level</h3>
+                    <h3>{{ t('dashboard', 'severity_level') }}</h3>
                     <div class="meter-container">
                         <div class="meter-bar">
                             <div class="meter-fill" style="width: {{ (analysis.severity_level|default(0) / 5) * 100 }}%"></div>
                         </div>
                         <div class="meter-labels">
-                            <span>Mild</span>
-                            <span>Moderate</span>
-                            <span>Significant</span>
+                            <span>{{ t('dashboard', 'mild') }}</span>
+                            <span>{{ t('dashboard', 'moderate') }}</span>
+                            <span>{{ t('dashboard', 'significant') }}</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="profile-details">
                     <div class="profile-features">
-                        <h3>Specific Features</h3>
+                        <h3>{{ t('dashboard', 'specific_features') }}</h3>
                         <ul class="feature-list">
                             {% if analysis.specific_features %}
                                 {% for category, features in analysis.specific_features.items() %}
@@ -64,13 +64,13 @@
                                     {% endfor %}
                                 {% endfor %}
                             {% else %}
-                                <li>No specific features identified yet</li>
+                                <li>{{ t('dashboard', 'no_features') }}</li>
                             {% endif %}
                         </ul>
                     </div>
                     
                     <div class="profile-strengths">
-                        <h3>Your Strengths</h3>
+                        <h3>{{ t('dashboard', 'strengths') }}</h3>
                         <ul class="strength-list">
                             {% if analysis.strengths %}
                                 {% for strength, value in analysis.strengths.items() %}
@@ -80,7 +80,7 @@
                                     </li>
                                 {% endfor %}
                             {% else %}
-                                <li>No strengths identified yet</li>
+                                <li>{{ t('dashboard', 'no_strengths') }}</li>
                             {% endif %}
                         </ul>
                     </div>
@@ -90,31 +90,31 @@
         
         <div class="dashboard-card support-strategies">
             <div class="card-header">
-                <h2>Recommended Support Strategies</h2>
+                <h2>{{ t('dashboard', 'support_strategies') }}</h2>
             </div>
             <div class="card-content">
                 <div class="strategy-section primary-strategies">
-                    <h3>Primary Strategies</h3>
+                    <h3>{{ t('dashboard', 'primary_strategies') }}</h3>
                     <ul class="strategy-list">
                         {% if strategies.primary %}
                             {% for strategy in strategies.primary %}
                                 <li>{{ strategy }}</li>
                             {% endfor %}
                         {% else %}
-                            <li>No primary strategies available yet</li>
+                            <li>{{ t('dashboard', 'no_primary') }}</li>
                         {% endif %}
                     </ul>
                 </div>
                 
                 <div class="strategy-section secondary-strategies">
-                    <h3>Secondary Strategies</h3>
+                    <h3>{{ t('dashboard', 'secondary_strategies') }}</h3>
                     <ul class="strategy-list">
                         {% if strategies.secondary %}
                             {% for strategy in strategies.secondary %}
                                 <li>{{ strategy }}</li>
                             {% endfor %}
                         {% else %}
-                            <li>No secondary strategies available yet</li>
+                            <li>{{ t('dashboard', 'no_secondary') }}</li>
                         {% endif %}
                     </ul>
                 </div>
@@ -126,7 +126,7 @@
 <section class="dashboard-section">
     <div class="dashboard-card actions">
         <div class="card-header">
-            <h2>Next Steps</h2>
+            <h2>{{ t('dashboard', 'next_steps') }}</h2>
         </div>
         <div class="card-content">
             <div class="action-grid">
@@ -135,9 +135,9 @@
                         <i class="fas fa-upload"></i>
                     </div>
                     <div class="action-content">
-                        <h3>Upload Learning Material</h3>
-                        <p>Submit text-based learning materials to receive personalized adaptations based on your profile.</p>
-                        <a href="{{ url_for('material_upload') }}" class="btn btn-primary">Upload Material</a>
+                        <h3>{{ t('dashboard', 'upload_material') }}</h3>
+                        <p>{{ t('dashboard', 'upload_description') }}</p>
+                        <a href="{{ url_for('material_upload') }}" class="btn btn-primary">{{ t('dashboard', 'upload_button') }}</a>
                     </div>
                 </div>
                 
@@ -146,9 +146,9 @@
                         <i class="fas fa-history"></i>
                     </div>
                     <div class="action-content">
-                        <h3>View Previous Materials</h3>
-                        <p>Access your previously processed learning materials and continue your studies.</p>
-                        <a href="{{ url_for('materials_history') }}" class="btn btn-secondary">View History</a>
+                        <h3>{{ t('dashboard', 'view_previous') }}</h3>
+                        <p>{{ t('dashboard', 'view_description') }}</p>
+                        <a href="{{ url_for('materials_history') }}" class="btn btn-secondary">{{ t('dashboard', 'view_button') }}</a>
                     </div>
                 </div>
                 
@@ -157,9 +157,9 @@
                         <i class="fas fa-user-edit"></i>
                     </div>
                     <div class="action-content">
-                        <h3>Update Your Profile</h3>
-                        <p>Retake the questionnaire to update your learning profile as your needs change.</p>
-                        <a href="{{ url_for('questionnaire') }}" class="btn btn-secondary">Update Profile</a>
+                        <h3>{{ t('dashboard', 'update_profile') }}</h3>
+                        <p>{{ t('dashboard', 'update_description') }}</p>
+                        <a href="{{ url_for('questionnaire') }}" class="btn btn-secondary">{{ t('dashboard', 'update_button') }}</a>
                     </div>
                 </div>
                 
@@ -168,9 +168,9 @@
                         <i class="fas fa-graduation-cap"></i>
                     </div>
                     <div class="action-content">
-                        <h3>Learning Resources</h3>
-                        <p>Explore additional resources and tips for managing your specific learning challenges.</p>
-                        <a href="#" class="btn btn-secondary">View Resources</a>
+                        <h3>{{ t('dashboard', 'learning_resources') }}</h3>
+                        <p>{{ t('dashboard', 'resources_description') }}</p>
+                        <a href="#" class="btn btn-secondary">{{ t('dashboard', 'resources_button') }}</a>
                     </div>
                 </div>
             </div>
@@ -181,12 +181,12 @@
 <section class="dashboard-section">
     <div class="dashboard-card progress-tracking">
         <div class="card-header">
-            <h2>Your Learning Progress</h2>
+            <h2>{{ t('dashboard', 'progress_tracking') }}</h2>
         </div>
         <div class="card-content">
             <div class="progress-placeholder">
-                <p>Your learning progress will be displayed here as you use the system.</p>
-                <p>Upload and study materials to start tracking your progress.</p>
+                <p>{{ t('dashboard', 'progress_placeholder1') }}</p>
+                <p>{{ t('dashboard', 'progress_placeholder2') }}</p>
             </div>
         </div>
     </div>
@@ -197,11 +197,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Check if analysis is pending
-        const difficultyType = "{{ analysis.difficulty_type|default('Analysis Pending') }}";
+        const difficultyType = "{{ analysis.difficulty_type|default(t('dashboard', 'analysis_pending')) }}";
         const loadingOverlay = document.getElementById('loading-overlay');
         
         // If analysis is pending, show loading overlay and check for analysis results
-        if (difficultyType === 'Analysis Pending') {
+        if (difficultyType === "{{ t('dashboard', 'analysis_pending') }}") {
             loadingOverlay.style.display = 'flex';
             
             // Function to check if analysis is complete

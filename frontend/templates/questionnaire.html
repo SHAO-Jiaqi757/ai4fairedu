@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Learning Profile Questionnaire - AI4FairEdu{% endblock %}
+{% block title %}{{ t('questionnaire', 'title') }} - {{ t('base', 'site_title') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/questionnaire.css') }}">
@@ -8,14 +8,13 @@
 
 {% block content %}
 <section class="page-header">
-    <h1>Learning Profile Questionnaire</h1>
-    <p class="subtitle">Help us understand your learning needs to provide personalized support</p>
+    <h1>{{ t('questionnaire', 'title') }}</h1>
+    <p class="subtitle">{{ t('questionnaire', 'subtitle') }}</p>
 </section>
 
 <section class="questionnaire-section">
     <div class="questionnaire-intro">
-        <p>This questionnaire will help us understand your learning preferences, challenges, and strengths. Your responses will be used to personalize our learning support features to best meet your needs.</p>
-        <p>Please answer each question as accurately as possible. Your information will be kept confidential and used only to improve your learning experience.</p>
+        <p>{{ t('questionnaire', 'instructions') }}</p>
     </div>
     
     <form id="questionnaire-form" action="{{ url_for('submit_questionnaire') }}" method="POST">
@@ -29,15 +28,15 @@
         
         <!-- Section 1: Personal Information -->
         <div class="form-section" id="section-1">
-            <h2>Personal Information</h2>
+            <h2>{{ t('questionnaire', 'personal_info') }}</h2>
             
             <div class="form-group">
-                <label for="age">Age</label>
+                <label for="age">{{ t('questionnaire', 'age') }}</label>
                 <input type="number" id="age" name="age" min="5" max="100" required>
             </div>
             
             <div class="form-group">
-                <label for="education_level">Current Education Level</label>
+                <label for="education_level">{{ t('questionnaire', 'education_level') }}</label>
                 <select id="education_level" name="education_level" required>
                     <option value="">Select your education level</option>
                     <option value="elementary">Elementary School</option>

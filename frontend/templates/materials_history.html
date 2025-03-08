@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Learning Materials History{% endblock %}
+{% block title %}{{ t('materials_history', 'title') }} - {{ t('base', 'site_title') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/materials_history.css') }}">
@@ -9,8 +9,8 @@
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h1>Your Learning Materials</h1>
-        <p class="subtitle">Access your previously processed learning materials</p>
+        <h1>{{ t('materials_history', 'title') }}</h1>
+        <p class="subtitle">{{ t('materials_history', 'subtitle') }}</p>
     </div>
 
     <div class="materials-container">
@@ -25,17 +25,17 @@
                     <div class="material-content">
                         <div class="material-stats">
                             <div class="stat">
-                                <span class="stat-label">Content Length</span>
-                                <span class="stat-value">{{ material.content_length }} chars</span>
+                                <span class="stat-label">{{ t('materials_history', 'material_title') }}</span>
+                                <span class="stat-value">{{ material.title }}</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-label">Micro Units</span>
-                                <span class="stat-value">{{ "Yes" if material.has_micro_units else "No" }}</span>
+                                <span class="stat-label">{{ t('materials_history', 'processed_date') }}</span>
+                                <span class="stat-value">{{ material.processed_date }}</span>
                             </div>
                         </div>
                     </div>
                     <div class="material-actions">
-                        <a href="{{ url_for('learning_view') }}?material_id={{ material.id }}" class="btn btn-primary">View Material</a>
+                        <a href="{{ url_for('learning_view') }}?material_id={{ material.id }}" class="btn btn-primary">{{ t('materials_history', 'view') }}</a>
                     </div>
                 </div>
                 {% endfor %}
@@ -44,12 +44,16 @@
             <div class="no-materials">
                 <div class="message">
                     <i class="fas fa-book"></i>
-                    <h3>No Learning Materials Found</h3>
-                    <p>You haven't processed any learning materials yet. Upload a new material to get started.</p>
-                    <a href="{{ url_for('material_upload') }}" class="btn btn-primary">Upload Material</a>
+                    <h3>{{ t('materials_history', 'no_materials') }}</h3>
+                    <p>{{ t('materials_history', 'no_materials') }}</p>
+                    <a href="{{ url_for('material_upload') }}" class="btn btn-primary">{{ t('materials_history', 'upload_new') }}</a>
                 </div>
             </div>
         {% endif %}
+    </div>
+    
+    <div class="back-link">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">{{ t('materials_history', 'back') }}</a>
     </div>
 </div>
 {% endblock %} 

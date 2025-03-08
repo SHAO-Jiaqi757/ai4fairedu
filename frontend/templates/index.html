@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}AI4FairEdu - Personalized Learning Support{% endblock %}
+{% block title %}{{ t('home', 'title') }} - {{ t('base', 'site_title') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
@@ -9,114 +9,105 @@
 {% block content %}
 <section class="hero">
     <div class="hero-content">
-        <h1>Personalized Learning Support for Everyone</h1>
-        <p class="hero-subtitle">AI-powered tools to help students with ADHD and dyslexia achieve their full potential</p>
+        <h1>{{ t('home', 'title') }}</h1>
+        <p class="hero-subtitle">{{ t('home', 'subtitle') }}</p>
         <div class="hero-buttons">
-            <a href="{{ url_for('questionnaire') }}" class="btn btn-primary">Start Your Journey</a>
-            <a href="{{ url_for('about') }}" class="btn btn-secondary">Learn More</a>
+            <a href="{{ url_for('questionnaire') }}" class="btn btn-primary">{{ t('home', 'get_started') }}</a>
+            <a href="{{ url_for('about') }}" class="btn btn-secondary">{{ t('home', 'learn_more') }}</a>
         </div>
-    <!-- </div> -->
-    <!-- <div class="hero-image">
-        <img src="{{ url_for('static', filename='images/hero-illustration.svg') }}" alt="Students learning with AI assistance">
-    </div> -->
+    </div>
 </section>
 
 <section class="features">
-    <h2 class="section-title">How AI4FairEdu Helps You Learn</h2>
+    <h2 class="section-title">{{ t('home', 'intro_heading') }}</h2>
+    <!-- <p class="section-description">{{ t('home', 'intro_text') }}</p> -->
     <div class="feature-grid">
         <div class="feature-card">
             <div class="feature-icon">
                 <i class="fas fa-brain"></i>
             </div>
-            <h3>ADHD Support</h3>
-            <p>Break down content into manageable chunks, provide timely reminders, and create an environment that minimizes distractions.</p>
+            <h3>{{ t('home', 'feature1_title') }}</h3>
+            <p>{{ t('home', 'feature1_text') }}</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon">
                 <i class="fas fa-book-reader"></i>
             </div>
-            <h3>Dyslexia Support</h3>
-            <p>Simplify complex text, provide vocabulary assistance, and offer visual aids to enhance reading comprehension.</p>
+            <h3>{{ t('home', 'feature2_title') }}</h3>
+            <p>{{ t('home', 'feature2_text') }}</p>
         </div>
         <div class="feature-card">
             <div class="feature-icon">
                 <i class="fas fa-user-cog"></i>
             </div>
-            <h3>Personalized Analysis</h3>
-            <p>Analyze your learning profile to identify strengths and challenges, then tailor support strategies to your unique needs.</p>
-        </div>
-        <div class="feature-card">
-            <div class="feature-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <h3>Progress Tracking</h3>
-            <p>Monitor your learning journey with detailed analytics and adjust strategies based on your performance.</p>
+            <h3>{{ t('home', 'feature3_title') }}</h3>
+            <p>{{ t('home', 'feature3_text') }}</p>
         </div>
     </div>
 </section>
 
 <section class="how-it-works">
-    <h2 class="section-title">How It Works</h2>
+    <h2 class="section-title">{{ t('home', 'how_it_works_title') }}</h2>
     <div class="steps">
         <div class="step">
             <div class="step-number">1</div>
             <div class="step-content">
-                <h3>Complete the Questionnaire</h3>
-                <p>Answer questions about your learning preferences, challenges, and strengths to help us understand your needs.</p>
+                <h3>{{ t('home', 'step1_title') }}</h3>
+                <p>{{ t('home', 'step1_text') }}</p>
             </div>
         </div>
         <div class="step">
             <div class="step-number">2</div>
             <div class="step-content">
-                <h3>Receive Your Analysis</h3>
-                <p>Our AI analyzes your responses to identify potential learning difficulties and recommend personalized strategies.</p>
+                <h3>{{ t('home', 'step2_title') }}</h3>
+                <p>{{ t('home', 'step2_text') }}</p>
             </div>
         </div>
         <div class="step">
             <div class="step-number">3</div>
             <div class="step-content">
-                <h3>Upload Learning Materials</h3>
-                <p>Submit text-based learning materials that you want to study more effectively.</p>
+                <h3>{{ t('home', 'step3_title') }}</h3>
+                <p>{{ t('home', 'step3_text') }}</p>
             </div>
         </div>
         <div class="step">
             <div class="step-number">4</div>
             <div class="step-content">
-                <h3>Study with Personalized Support</h3>
-                <p>Access your transformed learning materials with features tailored to your specific learning needs.</p>
+                <h3>{{ t('home', 'step4_title') }}</h3>
+                <p>{{ t('home', 'step4_text') }}</p>
             </div>
         </div>
     </div>
 </section>
 
 <section class="testimonials">
-    <h2 class="section-title">What Our Users Say</h2>
+    <h2 class="section-title">{{ t('home', 'testimonials_title') }}</h2>
     <div class="testimonial-slider">
         <div class="testimonial">
             <div class="testimonial-content">
-                <p>"AI4FairEdu has transformed my learning experience. Breaking down complex topics into manageable chunks helps me stay focused and engaged."</p>
+                <p>"{{ t('home', 'testimonial1_text') }}"</p>
             </div>
             <div class="testimonial-author">
-                <div class="author-name">Alex Chen</div>
-                <div class="author-info">College Student with ADHD</div>
+                <div class="author-name">{{ t('home', 'testimonial1_author') }}</div>
+                <div class="author-info">{{ t('home', 'testimonial1_role') }}</div>
             </div>
         </div>
         <div class="testimonial">
             <div class="testimonial-content">
-                <p>"The text simplification feature has made reading academic papers so much easier. I can now understand complex concepts without getting overwhelmed by difficult vocabulary."</p>
+                <p>"{{ t('home', 'testimonial2_text') }}"</p>
             </div>
             <div class="testimonial-author">
-                <div class="author-name">Jamie Rodriguez</div>
-                <div class="author-info">Graduate Student with Dyslexia</div>
+                <div class="author-name">{{ t('home', 'testimonial2_author') }}</div>
+                <div class="author-info">{{ t('home', 'testimonial2_role') }}</div>
             </div>
         </div>
         <div class="testimonial">
             <div class="testimonial-content">
-                <p>"As an educator, I've seen remarkable improvements in my students' engagement and comprehension when using AI4FairEdu. It's a game-changer for inclusive education."</p>
+                <p>"{{ t('home', 'testimonial3_text') }}"</p>
             </div>
             <div class="testimonial-author">
-                <div class="author-name">Dr. Sarah Johnson</div>
-                <div class="author-info">Special Education Teacher</div>
+                <div class="author-name">{{ t('home', 'testimonial3_author') }}</div>
+                <div class="author-info">{{ t('home', 'testimonial3_role') }}</div>
             </div>
         </div>
     </div>
@@ -124,9 +115,9 @@
 
 <section class="cta">
     <div class="cta-content">
-        <h2>Ready to Transform Your Learning Experience?</h2>
-        <p>Join thousands of students who have discovered their full potential with AI4FairEdu.</p>
-        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">Get Started Now</a>
+        <h2>{{ t('home', 'cta_title') }}</h2>
+        <p>{{ t('home', 'cta_text') }}</p>
+        <a href="{{ url_for('questionnaire') }}" class="btn btn-primary btn-large">{{ t('home', 'start_questionnaire') }}</a>
     </div>
 </section>
 {% endblock %}
