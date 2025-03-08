@@ -88,13 +88,13 @@ def micro_content_divider(state: Dict) -> Dict:
     
     # 获取用户问卷答案
     questionnaire_answers = state.get("user_profile", {}).get("questionnaire_answers", {})
-    
+    attention_span_minutes = questionnaire_answers.get("attention_span_minutes", 10)
     # 创建提示
     prompt = prompt_manager.get_prompt("micro_content_division") or ChatPromptTemplate.from_messages([
         ("system", """你是一位专门为ADHD学生提供支持的教育内容适配专家。你的任务是将长篇学习材料分解为更小、更易于管理的学习单元，以帮助学生保持注意力和提高学习效果。
 
 请遵循以下原则：
-1. 将内容分解为5-10分钟可完成的学习单元
+1. 将内容分解为{attention_span_minutes}分钟可完成的学习单元
 2. 每个单元应该有明确的焦点和学习目标
 3. 识别内容的自然断点和主题转换
 4. 为每个单元提取3-5个关键点
@@ -106,12 +106,12 @@ def micro_content_divider(state: Dict) -> Dict:
    - 学习目标
    - 关键点列表
    - 估计完成时间（分钟）
-   - 理解检查问题（1-2个简短问题）"""),
+   - 理解检查问题（1-2个简短问题)"""),
         ("human", "请将以下学习材料分解为微内容单元，以帮助ADHD学生更好地学习：\n\n{content}")
     ])
     
     # 调用LLM
-    response = llm.invoke(prompt.format(content=current_content))
+    response = llm.invoke(prompt.format(attention_span_minutes=attention_span_minutes, content=current_content))
     
     # 解析响应
     micro_units = parse_micro_units(response.content)
@@ -306,40 +306,3 @@ def parse_micro_units(content: str) -> List[Dict[str, Any]]:
         micro_units.append(unit)
     
     return micro_units
-
-# 渐进式复杂度调整器
-def progressive_complexity_adjuster(state: Dict) -> Dict:
-    """
-    根据用户注意力状态动态调整内容复杂度
-    
-    具体功能:
-    1. 创建多层次内容版本(简化、标准、详细)
-    2. 监测用户注意力状态指标(互动频率、完成时间)
-    3. 实现渐进式内容展现策略
-    4. 在注意力下降时提供复习和简化版本
-    5. 支持用户手动调整复杂度级别
-    """
-    # 实现细节...
-    return state
-
-# ADHD支持路由器图
-def build_adhd_support_graph() -> StateGraph:
-    """
-    构建ADHD支持系统的工作流图
-    """
-    workflow = StateGraph(name="adhd_support")
-    
-    # 添加所有ADHD支持节点
-    workflow.add_node("micro_content_divider", micro_content_divider)
-    workflow.add_node("progressive_complexity_adjuster", progressive_complexity_adjuster)
-    workflow.add_node("key_info_extractor", key_info_extractor)
-    workflow.add_node("time_aware_prompt_system", time_aware_prompt_system)
-    workflow.add_node("task_breakdown_planner", task_breakdown_planner)
-    workflow.add_node("focus_mode_generator", focus_mode_generator)
-    workflow.add_node("personalized_connection_generator", personalized_connection_generator)
-    workflow.add_node("active_retrieval_exercise_designer", active_retrieval_exercise_designer)
-    workflow.add_node("gamification_element_builder", gamification_element_builder)
-    
-    # 定义工作流逻辑...
-    
-    return workflow.compile() 

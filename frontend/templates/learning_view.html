@@ -7,42 +7,6 @@
 {% endblock %}
 
 {% block content %}
-<!-- Debug information (only visible during development) -->
-{% if debug %}
-<div class="debug-info" style="background: #f8f9fa; border: 1px solid #ddd; padding: 10px; margin-bottom: 20px; font-family: monospace; font-size: 12px;">
-    <h3>Debug Information</h3>
-    <p><strong>User Profile:</strong> {{ user_profile }}</p>
-    <p><strong>Difficulty Type:</strong> {{ user_profile.difficulty_type }}</p>
-    <p><strong>Support Level:</strong> {{ user_profile.support_level }}</p>
-    <p><strong>Processed Content Keys:</strong> {{ processed_content.keys()|list }}</p>
-    {% if processed_content.sections %}
-    <p><strong>Sections:</strong> {{ processed_content.sections|length }}</p>
-    <p><strong>First Section Keys:</strong> {{ processed_content.sections[0].keys()|list }}</p>
-    
-    {% if processed_content.sections[0].micro_units %}
-    <p><strong>Micro Units:</strong> {{ processed_content.sections[0].micro_units|length }}</p>
-    <p><strong>First Micro Unit Keys:</strong> {{ processed_content.sections[0].micro_units[0].keys()|list }}</p>
-    {% endif %}
-    
-    {% if processed_content.sections[0].vocabulary %}
-    <p><strong>Vocabulary Terms:</strong> {{ processed_content.sections[0].vocabulary.keys()|list }}</p>
-    {% endif %}
-    {% else %}
-    <p><strong>No sections found in processed content</strong></p>
-    {% endif %}
-    <p><strong>Original Content Length:</strong> {{ original_content|length }}</p>
-    
-    {% if processed_content.interaction_history %}
-    <p><strong>Interaction History:</strong></p>
-    <ul>
-        {% for interaction in processed_content.interaction_history %}
-        <li>{{ interaction.step }}: {{ interaction.memory|join(', ') }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-</div>
-{% endif %}
-
 <div class="learning-view-container">
     <div class="learning-view-header">
         <h1>{{ material_title }}</h1>
@@ -51,24 +15,6 @@
             <button id="toggle-processed" class="btn btn-primary active">Show Processed</button>
         </div>
     </div>
-
-    <!-- Debug info (only visible in development) -->
-    {% if config.DEBUG %}
-    <div class="debug-info" style="background: #f8f9fa; padding: 10px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 5px;">
-        <h5>Debug Information</h5>
-        <p><strong>User Profile:</strong> {{ user_profile }}</p>
-        <p><strong>Difficulty Type:</strong> {{ user_profile.difficulty_type }}</p>
-        <p><strong>Support Level:</strong> {{ user_profile.support_level }}</p>
-        <p><strong>Sections:</strong> {{ processed_content.sections|length }}</p>
-        {% if processed_content.sections %}
-            <p><strong>First Section Keys:</strong> {{ processed_content.sections[0].keys()|list }}</p>
-            {% if processed_content.sections[0].micro_units %}
-                <p><strong>Micro Units:</strong> {{ processed_content.sections[0].micro_units|length }}</p>
-                <p><strong>First Micro Unit Keys:</strong> {{ processed_content.sections[0].micro_units[0].keys()|list }}</p>
-            {% endif %}
-        {% endif %}
-    </div>
-    {% endif %}
 
     <div class="content-container">
         <!-- Content Views -->
@@ -116,14 +62,14 @@
                 <div class="learning-tools">
                     <h3>Learning Tools</h3>
                     <div class="tools-grid">
-                        <button class="tool-btn" data-tool="focus">
+                        <!-- <button class="tool-btn" data-tool="focus">
                             <i class="fas fa-eye"></i>
                             <span>Focus Mode</span>
                         </button>
                         <button class="tool-btn" data-tool="tts">
                             <i class="fas fa-volume-up"></i>
                             <span>Read Aloud</span>
-                        </button>
+                        </button> -->
                         <button class="tool-btn" data-tool="notes">
                             <i class="fas fa-sticky-note"></i>
                             <span>Notes</span>
@@ -138,18 +84,6 @@
 
             <!-- Main Content Area -->
             <main class="content-area">
-                <div class="content-header">
-                    <div class="view-controls">
-                        <button class="view-btn active" data-view="adapted">Adapted View</button>
-                        <button class="view-btn" data-view="original">Original</button>
-                        <button class="view-btn" data-view="side-by-side">Side by Side</button>
-                    </div>
-                    <div class="content-actions">
-                        <button class="action-btn" title="Download"><i class="fas fa-download"></i></button>
-                        <button class="action-btn" title="Print"><i class="fas fa-print"></i></button>
-                        <button class="action-btn" title="Share"><i class="fas fa-share"></i></button>
-                    </div>
-                </div>
 
                 <div class="content-wrapper">
                     <!-- Adapted Content View -->
@@ -179,7 +113,7 @@
                                 {% if user_profile.difficulty_type in ['ADHD', 'Combined'] and section.micro_units %}
                                 <div class="micro-units">
                                     {% for unit in section.micro_units %}
-                                    <div class="micro-unit">
+                                    <div class="micro-unit" data-unit-number="{{ unit.unit_number }}">
                                         <div class="unit-header">
                                             <span class="unit-number">Unit {{ loop.index }}</span>
                                             <span class="unit-time">{{ unit.estimated_time if unit.estimated_time is defined else unit.estimated_time_minutes if unit.estimated_time_minutes is defined else 2 }}min</span>
@@ -189,6 +123,32 @@
                                             {{ unit.content | safe }}
                                         </div>
                                         <button class="read-more-btn">Read More</button>
+                                        <div class="detailed-content" style="display: none;">
+                                            <h3>Detailed Content</h3>
+                                            {% set found_detailed = false %}
+                                            
+                                            {% if section.detailed_units %}
+                                                {% for detailed_unit in section.detailed_units %}
+                                                    {% if detailed_unit.unit_number == unit.unit_number %}
+                                                        {{ detailed_unit.detailed_content | safe }}
+                                                        {% set found_detailed = true %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            
+                                            {% if not found_detailed and processed_content.detailed_units %}
+                                                {% for detailed_unit in processed_content.detailed_units %}
+                                                    {% if detailed_unit.unit_number == unit.unit_number %}
+                                                        {{ detailed_unit.detailed_content | safe }}
+                                                        {% set found_detailed = true %}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
+                                            
+                                            {% if not found_detailed %}
+                                                <p>No detailed content available for this unit.</p>
+                                            {% endif %}
+                                        </div>
                                         <div class="unit-progress">
                                             <button class="mark-complete-btn">Mark as Complete</button>
                                             <span class="completion-status">Not started</span>
@@ -260,38 +220,12 @@
                             </div>
                         {% endif %}
                     </div>
-
-                    <!-- Original Content View -->
-                    <div class="content-view original-view">
-                        {{ original_content | safe }}
-                    </div>
-
-                    <!-- Side by Side View -->
-                    <div class="content-view side-by-side-view">
-                        <div class="original-side">
-                            <h3>Original</h3>
-                            {{ original_content | safe }}
-                        </div>
-                        <div class="adapted-side">
-                            <h3>Adapted</h3>
-                            {% if processed_content.sections %}
-                                {% for section in processed_content.sections %}
-                                <div class="content-section">
-                                    <h4>{{ section.title }}</h4>
-                                    {{ section.content | safe }}
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>No adapted content available</p>
-                            {% endif %}
-                        </div>
-                    </div>
                 </div>
             </main>
 
             <!-- Right Sidebar -->
             <aside class="tools-sidebar">
-                <!-- Focus Mode Panel -->
+                <!-- Focus Mode Panel
                 <div class="tool-panel" id="focus-panel">
                     <h3>Focus Mode</h3>
                     <div class="tool-controls">
@@ -308,10 +242,10 @@
                             <input type="range" id="dim-level" min="0" max="100" value="50">
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Text-to-Speech Panel -->
-                <div class="tool-panel" id="tts-panel">
+                <!-- <div class="tool-panel" id="tts-panel">
                     <h3>Text to Speech</h3>
                     <div class="tool-controls">
                         <div class="control-group">
@@ -328,7 +262,7 @@
                             <button id="stop-btn"><i class="fas fa-stop"></i></button>
                         </div>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Notes Panel -->
                 <div class="tool-panel" id="notes-panel">
@@ -384,8 +318,58 @@
     </div>
 </div>
 {% endif %}
+
+<!-- Replace with a modal for original content -->
+<div id="original-content-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Original Content</h2>
+            <span class="close-modal">&times;</span>
+        </div>
+        <div class="modal-body">
+            {{ original_content | safe }}
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_scripts %}
+<script>
+    // Make processed content available to JavaScript
+    try {
+        window.processedContent = JSON.parse('{{ processed_content|tojson|safe }}');
+        
+        // If detailed_units aren't available in the JSON, create them from the DOM
+        if (!window.processedContent.detailed_units) {
+            window.processedContent.detailed_units = [];
+            
+            // Find all micro-units
+            const microUnits = document.querySelectorAll('.micro-unit');
+            
+            // For each micro-unit, extract the detailed content and create a detailed unit object
+            microUnits.forEach(unit => {
+                const unitNumber = parseInt(unit.getAttribute('data-unit-number'), 10);
+                const detailedContentEl = unit.querySelector('.detailed-content');
+                
+                if (detailedContentEl && detailedContentEl.innerHTML.length > 100) {
+                    // Extract the content after the "Detailed Content" heading
+                    const contentWithoutHeading = detailedContentEl.innerHTML.replace(/<h3>Detailed Content<\/h3>/, '');
+                    
+                    // Create a detailed unit object
+                    const detailedUnit = {
+                        unit_number: unitNumber,
+                        estimated_time_minutes: 5, // Default value
+                        detailed_content: contentWithoutHeading
+                    };
+                    
+                    // Add to the detailed_units array
+                    window.processedContent.detailed_units.push(detailedUnit);
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error parsing processed content:", error);
+    }
+</script>
 <script src="{{ url_for('static', filename='js/learning_view.js') }}"></script>
 {% endblock %} 

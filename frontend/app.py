@@ -398,42 +398,37 @@ def learning_view():
     if 'current_material' not in session:
         return redirect(url_for('material_upload'))
     
-    # Get material info from session
-    material = session.get('current_material', {})
-    material_id = material.get('id')
-    user_id = session.get('user_id')
-    material_title = material.get('title', 'Untitled Material')
+    user_id = session.get('user_id', 'anonymous')
+    material_id = session.get('current_material', {}).get('id')
+    material_title = session.get('current_material', {}).get('title', 'Learning Material')
     
-    if not material_id or not user_id:
-        flash('No material found. Please upload a new material.', 'error')
+    if not material_id:
+        flash('No material selected. Please upload a material first.', 'warning')
         return redirect(url_for('material_upload'))
-    
-    # Get user profile
-    user_profile = session.get('user_analysis', {})
     
     # Load processed content
     processed_content, original_content = load_processed_content(user_id, material_id)
     
     if not processed_content:
-        # Check if processing is still ongoing
-        processing_dir = os.path.join(config.get("storage.results_path") or "data/results", "processing")
-        status_file = os.path.join(processing_dir, f"{user_id}_{material_id}_status.json")
-        
-        if os.path.exists(status_file):
-            with open(status_file, 'r') as f:
-                status_data = json.load(f)
-                
-            if status_data.get('status') == 'processing':
-                flash('Material processing is still in progress. Please wait.', 'info')
-                return redirect(url_for('material_processing'))
-        
-        flash('Material processing is not complete or failed. Please try again.', 'error')
+        flash('Material processing not complete. Please wait a moment.', 'info')
         return redirect(url_for('material_processing'))
     
-    # Debug output
     print(f"Loaded processed content for material {material_id}:")
-    print(f"User profile: {user_profile}")
+    print(f"Processed content keys: {processed_content.keys()}")
+    if "detailed_units" in processed_content:
+        print(f"Found {len(processed_content['detailed_units'])} detailed units in processed_content")
+        print(f"First detailed unit: {processed_content['detailed_units'][0] if processed_content['detailed_units'] else 'None'}")
+    else:
+        print("No detailed_units found in processed_content")
+    
     print(f"Processed content sections: {len(processed_content.get('sections', []))}")
+    
+    # Get user profile
+    user_profile = session.get('user_analysis', {})
+    print(f"User profile: {user_profile}")
+    
+    # Get interaction history for agent explanation
+    interaction_history = processed_content.get('interaction_history', [])
     
     # Handle different field names in the user profile
     if 'difficulty_type' not in user_profile and 'learning_disability' in user_profile:
@@ -469,7 +464,6 @@ def learning_view():
     
     # Get agents used from the interaction history
     agents_used = []
-    interaction_history = processed_content.get('interaction_history', [])
     for interaction in interaction_history:
         if 'step' in interaction and interaction['step'] not in [agent['id'] for agent in agents_used]:
             agent_id = interaction['step']
@@ -737,6 +731,21 @@ def load_processed_content(user_id, material_id):
         # Transform the agent output structure into the format expected by the template
         processed_content = {}
         
+        # Check if we have detailed_units directly in the raw_processed_content
+        if "detailed_units" in raw_processed_content:
+            detailed_units = raw_processed_content["detailed_units"]
+            print(f"Found {len(detailed_units)} detailed units directly in raw_processed_content")
+            
+            # Process detailed_units content
+            for unit in detailed_units:
+                # Ensure detailed_content is HTML
+                if "detailed_content" in unit and unit["detailed_content"] and isinstance(unit["detailed_content"], str):
+                    unit["detailed_content"] = convert_markdown_to_html(unit["detailed_content"])
+            
+            # Add detailed_units to processed_content
+            processed_content["detailed_units"] = detailed_units
+            print(f"Added {len(detailed_units)} detailed units directly to processed_content")
+        
         # Check if we have the raw agent output format (micro_units, simplified_text, etc.)
         if "micro_units" in raw_processed_content or "simplified_text" in raw_processed_content or "general_tools_applied" in raw_processed_content:
             # Create a sections array from the agent output
@@ -822,6 +831,11 @@ def load_processed_content(user_id, material_id):
                         simplified_content = convert_markdown_to_html(simplified_content)
                     section["simplified_content"] = simplified_content
             
+            # Add detailed_units to section if available
+            if "detailed_units" in processed_content:
+                section["detailed_units"] = processed_content["detailed_units"]
+                print(f"Added {len(processed_content['detailed_units'])} detailed units to section")
+            
             # Add the section to sections array
             sections.append(section)
             
@@ -830,43 +844,36 @@ def load_processed_content(user_id, material_id):
         elif "sections" in raw_processed_content:
             # If the processed content already has a sections array, use it
             processed_content = raw_processed_content
+            
+            # Check if we need to add detailed_units to the sections
+            if "detailed_units" in processed_content and "sections" in processed_content:
+                for section in processed_content["sections"]:
+                    if "detailed_units" not in section:
+                        section["detailed_units"] = processed_content["detailed_units"]
+                        print(f"Added {len(processed_content['detailed_units'])} detailed units to existing section")
         else:
             # Create a default structure if we don't have the expected format
-            print(f"Processed content missing or invalid structure: {raw_processed_content.keys() if raw_processed_content else 'None'}")
+            processed_content = {
+                "sections": [{
+                    "id": "section-1",
+                    "title": "Content",
+                    "content": original_text,
+                    "estimated_time": 5,
+                    "difficulty_level": "Standard"
+                }]
+            }
             
-            # Try to create a default structure if we have the original content
-            if "learning_materials" in results and "current_content" in results["learning_materials"]:
-                original_text = results["learning_materials"]["current_content"]
-                # Format original text as HTML if it's not already
-                if original_text and isinstance(original_text, str):
-                    original_text = convert_markdown_to_html(original_text)
-                
-                processed_content = {
-                    "sections": [
-                        {
-                            "id": "section-1",
-                            "title": results["learning_materials"].get("title", "Content"),
-                            "content": original_text,
-                            "estimated_time": len(original_text.split()) // 200 if original_text else 5,
-                            "difficulty_level": "Standard"
-                        }
-                    ]
-                }
-                print("Created default processed content structure")
+            # Add detailed_units if available
+            if "detailed_units" in raw_processed_content:
+                processed_content["detailed_units"] = raw_processed_content["detailed_units"]
+                processed_content["sections"][0]["detailed_units"] = raw_processed_content["detailed_units"]
         
-        # Add interaction history to processed content for agent information
-        if "interaction_history" in results:
-            processed_content["interaction_history"] = results["interaction_history"]
+        # Add interaction history if available
+        if "interaction_history" in raw_processed_content:
+            processed_content["interaction_history"] = raw_processed_content["interaction_history"]
         
-        # Load original content
-        material_file_path = os.path.join(material_dir, f"{user_id}_{material_id}.txt")
-        if os.path.exists(material_file_path):
-            with open(material_file_path, 'r') as f:
-                original_content = f.read()
-        else:
-            # Fallback to content in results if file doesn't exist
-            original_content = results.get("learning_materials", {}).get("current_content", "")
-            print(f"Original content file not found, using fallback: {len(original_content)} bytes")
+        # Get original content
+        original_content = results.get("learning_materials", {}).get("current_content", "")
         
         # Format original content as HTML if it's not already
         if original_content and isinstance(original_content, str):
@@ -877,7 +884,7 @@ def load_processed_content(user_id, material_id):
         print(f"Error loading processed content: {str(e)}")
         import traceback
         traceback.print_exc()
-        return {}, ""
+        return None, None
 
 if __name__ == '__main__':
     # Exempt certain routes from CSRF protection (we'll handle it manually for AJAX)

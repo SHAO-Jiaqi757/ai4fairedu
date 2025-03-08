@@ -6,8 +6,9 @@ from src.utils.llm_utils import get_llm
 
 # 导入节点函数
 from src.user_profile import analyze_user_profile as profile_analyzer
-from src.adhd_support import build_adhd_support_graph, micro_content_divider
-from src.dyslexia_support import build_dyslexia_support_graph, syntax_simplifier
+from src.adhd_support import micro_content_divider
+from src.dyslexia_support import syntax_simplifier
+from src.content_generator import content_generator
 
 # 简单的内存类
 class SimpleMemory:
@@ -106,6 +107,32 @@ def general_tools_processor(state: Dict) -> Dict:
     
     return state
 
+# 内容生成处理器
+def content_generation_processor(state: Dict) -> Dict:
+    """生成完整的学习内容"""
+    print("执行: 内容生成处理")
+    print(f"内容生成处理器输入状态: processed_content keys: {state.get('processed_content', {}).keys()}")
+    
+    # 使用内容生成器
+    result_state = content_generator(state)
+    
+    print(f"内容生成处理器输出状态: processed_content keys: {result_state.get('processed_content', {}).keys()}")
+    if "detailed_units" in result_state.get("processed_content", {}):
+        print(f"生成了 {len(result_state['processed_content']['detailed_units'])} 个详细单元")
+    else:
+        print("没有生成详细单元")
+    
+    # 记录处理历史
+    memory = SimpleMemory()
+    memory.add("完成内容生成处理")
+    result_state["interaction_history"].append({
+        "step": "content_generation_processor",
+        "tool": "content_generator",
+        "memory": memory.get_all()
+    })
+    
+    return result_state
+
 # 构建主控制图
 def build_support_system() -> StateGraph:
     """构建支持系统的工作流图"""
@@ -148,7 +175,15 @@ def build_support_system() -> StateGraph:
             print("路由到: dyslexia_support")
             return "dyslexia_support"
         
-        # 如果已经完成了微内容分割和句法简化，使用通用工具
+        # 检查是否已经生成了详细内容
+        if "detailed_units" not in state.get("processed_content", {}):
+            # 如果还没有生成详细内容，进行内容生成
+            print("路由到: content_generation")
+            print(f"processed_content keys: {state.get('processed_content', {}).keys()}")
+            print(f"micro_units count: {len(state.get('processed_content', {}).get('micro_units', []))}")
+            return "content_generation"
+        
+        # 如果已经完成了所有处理步骤，使用通用工具
         print("路由到: general_tools")
         return "general_tools"
     
@@ -157,6 +192,7 @@ def build_support_system() -> StateGraph:
     workflow.add_node("profile_analyzer", user_profile_analyzer)
     workflow.add_node("adhd_support", adhd_support_processor)
     workflow.add_node("dyslexia_support", dyslexia_support_processor)
+    workflow.add_node("content_generation", content_generation_processor)
     workflow.add_node("general_tools", general_tools_processor)
     
     # 添加条件路由
@@ -167,6 +203,7 @@ def build_support_system() -> StateGraph:
             "profile_analyzer": "profile_analyzer",
             "adhd_support": "adhd_support",
             "dyslexia_support": "dyslexia_support",
+            "content_generation": "content_generation",
             "general_tools": "general_tools",
             "end": END
         }
@@ -176,6 +213,7 @@ def build_support_system() -> StateGraph:
     workflow.add_edge("profile_analyzer", "router")
     workflow.add_edge("adhd_support", "router")
     workflow.add_edge("dyslexia_support", "router")
+    workflow.add_edge("content_generation", "router")
     workflow.add_edge("general_tools", "router")
     
     # 设置入口点

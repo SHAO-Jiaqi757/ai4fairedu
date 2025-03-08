@@ -196,25 +196,3 @@ def vocabulary_substitution_engine(state: Dict) -> Dict:
     """
     # 实现细节...
     return state
-
-# 阅读障碍支持路由器图
-def build_dyslexia_support_graph() -> StateGraph:
-    """
-    构建阅读障碍支持系统的工作流图
-    """
-    workflow = StateGraph(name="dyslexia_support")
-    
-    # 添加所有阅读障碍支持节点
-    workflow.add_node("syntax_simplifier", syntax_simplifier)
-    workflow.add_node("vocabulary_substitution_engine", vocabulary_substitution_engine)
-    workflow.add_node("semantic_chunker", semantic_chunker)
-    workflow.add_node("pre_reading_question_generator", pre_reading_question_generator)
-    workflow.add_node("concept_map_builder", concept_map_builder)
-    workflow.add_node("multisensory_association_generator", multisensory_association_generator)
-    workflow.add_node("phonological_awareness_exercise_designer", phonological_awareness_exercise_designer)
-    workflow.add_node("rapid_naming_training_generator", rapid_naming_training_generator)
-    workflow.add_node("progressive_reading_fluency_exercise", progressive_reading_fluency_exercise)
-    
-    # 定义工作流逻辑...
-    
-    return workflow.compile() 

@@ -4,9 +4,211 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("Learning view script loaded");
+    
+    // Function to populate all detailed content elements
+    function populateAllDetailedContent() {
+        // First check if we have detailed_units in window.processedContent
+        if (!window.processedContent || !window.processedContent.detailed_units) {
+            return;
+        }
+        
+        // Force populate all detailed content elements
+        const microUnits = document.querySelectorAll('.micro-unit');
+        let populatedCount = 0;
+        
+        microUnits.forEach(unit => {
+            const unitNumber = unit.getAttribute('data-unit-number');
+            
+            if (!unitNumber) {
+                return;
+            }
+            
+            // Get the detailed-content element
+            let detailedContent = unit.querySelector('.detailed-content');
+            
+            // Check if the detailed content already exists and has content
+            if (detailedContent && detailedContent.innerHTML.length > 100 && 
+                !detailedContent.innerHTML.includes('No detailed content available')) {
+                populatedCount++;
+                return;
+            }
+            
+            // Find the matching detailed unit
+            const detailedUnit = window.processedContent.detailed_units.find(
+                du => du.unit_number.toString() === unitNumber
+            );
+            
+            if (!detailedUnit) {
+                return;
+            }
+            
+            // Create the detailed-content element if it doesn't exist
+            if (!detailedContent) {
+                detailedContent = document.createElement('div');
+                detailedContent.className = 'detailed-content';
+                detailedContent.style.display = 'none';
+                
+                // Insert it after the unit-content
+                const unitContent = unit.querySelector('.unit-content');
+                if (unitContent) {
+                    unitContent.insertAdjacentElement('afterend', detailedContent);
+                } else {
+                    unit.appendChild(detailedContent);
+                }
+            }
+            
+            // Set the content
+            if (detailedUnit.detailed_content) {
+                detailedContent.innerHTML = `<h3>Detailed Content</h3>${detailedUnit.detailed_content}`;
+                populatedCount++;
+            } else {
+                detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available for this unit.</p>';
+            }
+        });
+    }
+
+    // Debug: Check for detailed units in the processed_content
+    if (window.processedContent) {
+        console.log("Processed content available in JS:", Object.keys(window.processedContent));
+        
+        // Check for detailed_units
+        if (window.processedContent.detailed_units) {
+            console.log("Detailed units found in window.processedContent:", window.processedContent.detailed_units.length);
+            console.log("First detailed unit:", window.processedContent.detailed_units[0]);
+            
+            // Check if the detailed_units have unit_number and detailed_content
+            const firstUnit = window.processedContent.detailed_units[0];
+            if (firstUnit) {
+                console.log("First unit number:", firstUnit.unit_number);
+                console.log("First unit detailed_content length:", firstUnit.detailed_content ? firstUnit.detailed_content.length : 0);
+            }
+        } else {
+            console.log("No detailed_units found in window.processedContent");
+        }
+        
+        // Check for sections
+        if (window.processedContent.sections) {
+            console.log("Sections found in window.processedContent:", window.processedContent.sections.length);
+            
+            // Check if the sections have detailed_units
+            const firstSection = window.processedContent.sections[0];
+            if (firstSection) {
+                console.log("First section keys:", Object.keys(firstSection));
+                
+                if (firstSection.detailed_units) {
+                    console.log("First section has detailed_units:", firstSection.detailed_units.length);
+                    console.log("First section's first detailed unit:", firstSection.detailed_units[0]);
+                } else {
+                    console.log("No detailed_units found in first section");
+                }
+                
+                // Check if the section has micro_units
+                if (firstSection.micro_units) {
+                    console.log("First section has micro_units:", firstSection.micro_units.length);
+                    console.log("First section's first micro unit:", firstSection.micro_units[0]);
+                    
+                    // Check if the micro_units have unit_number
+                    const firstMicroUnit = firstSection.micro_units[0];
+                    if (firstMicroUnit) {
+                        console.log("First micro unit number:", firstMicroUnit.unit_number);
+                    }
+                } else {
+                    console.log("No micro_units found in first section");
+                }
+            }
+        } else {
+            console.log("No sections found in window.processedContent");
+        }
+    } else {
+        console.log("No processed content available in JS");
+    }
+    
+    // Directly check the detailed content elements
+    const detailedContents = document.querySelectorAll('.detailed-content');
+    console.log(`Found ${detailedContents.length} detailed content elements in the DOM`);
+    detailedContents.forEach((content, index) => {
+        const parentUnit = content.closest('.micro-unit');
+        const unitNumber = parentUnit ? parentUnit.getAttribute('data-unit-number') : 'unknown';
+        console.log(`Detailed content ${index + 1} for unit ${unitNumber}:`);
+        console.log(`  - HTML length: ${content.innerHTML.length}`);
+        console.log(`  - Display: ${window.getComputedStyle(content).display}`);
+        console.log(`  - First 100 chars: ${content.innerHTML.substring(0, 100)}...`);
+    });
+    
+    // Check all micro-units in the DOM
+    const allMicroUnits = document.querySelectorAll('.micro-unit');
+    console.log(`Found ${allMicroUnits.length} micro-units in the DOM`);
+    allMicroUnits.forEach((unit, index) => {
+        const unitNumber = unit.getAttribute('data-unit-number');
+        console.log(`Micro-unit ${index + 1}:`);
+        console.log(`  - data-unit-number: ${unitNumber}`);
+        
+        // Check if this unit has a detailed-content element
+        const detailedContent = unit.querySelector('.detailed-content');
+        if (detailedContent) {
+            console.log(`  - Has detailed-content: Yes (length: ${detailedContent.innerHTML.length})`);
+        } else {
+            console.log(`  - Has detailed-content: No`);
+        }
+        
+        // Check if there's a matching detailed unit in window.processedContent
+        if (window.processedContent && window.processedContent.detailed_units) {
+            const matchingUnit = window.processedContent.detailed_units.find(
+                du => du.unit_number.toString() === unitNumber
+            );
+            if (matchingUnit) {
+                console.log(`  - Matching detailed unit found in window.processedContent: Yes`);
+                console.log(`  - Matching unit detailed_content length: ${matchingUnit.detailed_content ? matchingUnit.detailed_content.length : 0}`);
+            } else {
+                console.log(`  - Matching detailed unit found in window.processedContent: No`);
+            }
+        }
+    });
+    
     // View Controls
     const viewButtons = document.querySelectorAll('.view-btn');
     const contentViews = document.querySelectorAll('.content-view');
+    
+    // Original Content Modal
+    const toggleOriginalBtn = document.getElementById('toggle-original');
+    const originalContentModal = document.getElementById('original-content-modal');
+    const closeModalBtn = document.querySelector('.close-modal');
+    
+    // Show original content in modal when button is clicked
+    if (toggleOriginalBtn) {
+        toggleOriginalBtn.addEventListener('click', function() {
+            originalContentModal.style.display = 'block';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling behind modal
+        });
+    }
+    
+    // Close modal when close button is clicked
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function() {
+            originalContentModal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+        });
+    }
+    
+    // Close modal when clicking outside the modal content
+    window.addEventListener('click', function(event) {
+        if (event.target === originalContentModal) {
+            originalContentModal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    });
+    
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && originalContentModal.style.display === 'block') {
+            originalContentModal.style.display = 'none';
+            document.body.style.overflow = ''; // Restore scrolling
+        }
+    });
+    
+    // Call populateAllDetailedContent with a delay to ensure the DOM is fully loaded
+    setTimeout(populateAllDetailedContent, 1000);
     
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -55,82 +257,82 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Focus Mode
-    const highlightStyle = document.getElementById('highlight-style');
-    const dimLevel = document.getElementById('dim-level');
-    let focusModeActive = false;
+    // // Focus Mode
+    // const highlightStyle = document.getElementById('highlight-style');
+    // const dimLevel = document.getElementById('dim-level');
+    // let focusModeActive = false;
     
-    function toggleFocusMode(active) {
-        const contentArea = document.querySelector('.content-area');
-        focusModeActive = active;
+    // function toggleFocusMode(active) {
+    //     const contentArea = document.querySelector('.content-area');
+    //     focusModeActive = active;
         
-        if (active) {
-            contentArea.classList.add('focus-mode');
-            contentArea.style.setProperty('--dim-level', `${dimLevel.value}%`);
-        } else {
-            contentArea.classList.remove('focus-mode');
-        }
-    }
+    //     if (active) {
+    //         contentArea.classList.add('focus-mode');
+    //         contentArea.style.setProperty('--dim-level', `${dimLevel.value}%`);
+    //     } else {
+    //         contentArea.classList.remove('focus-mode');
+    //     }
+    // }
     
-    highlightStyle.addEventListener('change', function() {
-        const contentArea = document.querySelector('.content-area');
-        contentArea.setAttribute('data-highlight', this.value);
-    });
+    // highlightStyle.addEventListener('change', function() {
+    //     const contentArea = document.querySelector('.content-area');
+    //     contentArea.setAttribute('data-highlight', this.value);
+    // });
     
-    dimLevel.addEventListener('input', function() {
-        if (focusModeActive) {
-            document.querySelector('.content-area').style.setProperty('--dim-level', `${this.value}%`);
-        }
-    });
+    // dimLevel.addEventListener('input', function() {
+    //     if (focusModeActive) {
+    //         document.querySelector('.content-area').style.setProperty('--dim-level', `${this.value}%`);
+    //     }
+    // });
     
-    // Text to Speech
-    const voiceSelect = document.getElementById('voice-select');
-    const speechRate = document.getElementById('speech-rate');
-    const playBtn = document.getElementById('play-btn');
-    const pauseBtn = document.getElementById('pause-btn');
-    const stopBtn = document.getElementById('stop-btn');
-    let speechSynth = window.speechSynthesis;
-    let currentUtterance = null;
+    // // Text to Speech
+    // const voiceSelect = document.getElementById('voice-select');
+    // const speechRate = document.getElementById('speech-rate');
+    // const playBtn = document.getElementById('play-btn');
+    // const pauseBtn = document.getElementById('pause-btn');
+    // const stopBtn = document.getElementById('stop-btn');
+    // let speechSynth = window.speechSynthesis;
+    // let currentUtterance = null;
     
-    // Populate voice select
-    function loadVoices() {
-        const voices = speechSynth.getVoices();
-        voiceSelect.innerHTML = voices.map(voice => 
-            `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`
-        ).join('');
-    }
+    // // Populate voice select
+    // function loadVoices() {
+    //     const voices = speechSynth.getVoices();
+    //     voiceSelect.innerHTML = voices.map(voice => 
+    //         `<option value="${voice.name}">${voice.name} (${voice.lang})</option>`
+    //     ).join('');
+    // }
     
-    speechSynth.onvoiceschanged = loadVoices;
-    loadVoices();
+    // speechSynth.onvoiceschanged = loadVoices;
+    // loadVoices();
     
-    function speak(text) {
-        if (currentUtterance) {
-            speechSynth.cancel();
-        }
+    // function speak(text) {
+    //     if (currentUtterance) {
+    //         speechSynth.cancel();
+    //     }
         
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.voice = speechSynth.getVoices().find(voice => voice.name === voiceSelect.value);
-        utterance.rate = parseFloat(speechRate.value);
+    //     const utterance = new SpeechSynthesisUtterance(text);
+    //     utterance.voice = speechSynth.getVoices().find(voice => voice.name === voiceSelect.value);
+    //     utterance.rate = parseFloat(speechRate.value);
         
-        currentUtterance = utterance;
-        speechSynth.speak(utterance);
-    }
+    //     currentUtterance = utterance;
+    //     speechSynth.speak(utterance);
+    // }
     
-    playBtn.addEventListener('click', function() {
-        const activeSection = document.querySelector('.content-section.active');
-        if (activeSection) {
-            speak(activeSection.textContent);
-        }
-    });
+    // playBtn.addEventListener('click', function() {
+    //     const activeSection = document.querySelector('.content-section.active');
+    //     if (activeSection) {
+    //         speak(activeSection.textContent);
+    //     }
+    // });
     
-    pauseBtn.addEventListener('click', function() {
-        speechSynth.pause();
-    });
+    // pauseBtn.addEventListener('click', function() {
+    //     speechSynth.pause();
+    // });
     
-    stopBtn.addEventListener('click', function() {
-        speechSynth.cancel();
-        currentUtterance = null;
-    });
+    // stopBtn.addEventListener('click', function() {
+    //     speechSynth.cancel();
+    //     currentUtterance = null;
+    // });
     
     // Notes
     const notesArea = document.getElementById('notes-area');
@@ -239,21 +441,90 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to toggle micro-unit expansion
     function toggleMicroUnit(microUnit) {
+        const unitNumber = microUnit.getAttribute('data-unit-number');
+        
         // Close any other expanded units
         document.querySelectorAll('.micro-unit.expanded').forEach(unit => {
             if (unit !== microUnit) {
                 unit.classList.remove('expanded');
                 unit.querySelector('.unit-content').classList.add('collapsed');
+                // Hide detailed content for other units
+                const detailedContent = unit.querySelector('.detailed-content');
+                if (detailedContent) {
+                    detailedContent.style.display = 'none';
+                }
+                // Reset read more button text
+                const readMoreBtn = unit.querySelector('.read-more-btn');
+                if (readMoreBtn) {
+                    readMoreBtn.textContent = 'Read More';
+                }
             }
         });
         
         // Toggle current unit
+        const isExpanding = !microUnit.classList.contains('expanded');
         microUnit.classList.toggle('expanded');
         microUnit.querySelector('.unit-content').classList.toggle('collapsed');
         
-        // Scroll to the unit if it's expanded
-        if (microUnit.classList.contains('expanded')) {
-            microUnit.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Toggle detailed content visibility
+        let detailedContent = microUnit.querySelector('.detailed-content');
+        const readMoreBtn = microUnit.querySelector('.read-more-btn');
+        
+        if (isExpanding) {
+            // Check if the detailed content element exists and has content
+            if (detailedContent && detailedContent.innerHTML.length > 100) {
+                // The detailed content already exists in the DOM, just show it
+                detailedContent.style.display = 'block';
+            } else {
+                // If we don't have a detailed content element or it's empty, try to create/populate it
+                
+                // If we don't have a detailed content element, create one
+                if (!detailedContent) {
+                    detailedContent = document.createElement('div');
+                    detailedContent.className = 'detailed-content';
+                    
+                    // Insert it after the unit-content and before the read-more-btn
+                    const unitContent = microUnit.querySelector('.unit-content');
+                    if (unitContent && readMoreBtn) {
+                        readMoreBtn.insertAdjacentElement('beforebegin', detailedContent);
+                    } else {
+                        microUnit.appendChild(detailedContent);
+                    }
+                }
+                
+                // Find the matching detailed unit
+                if (window.processedContent && window.processedContent.detailed_units) {
+                    const detailedUnit = window.processedContent.detailed_units.find(
+                        du => du.unit_number.toString() === unitNumber
+                    );
+                    
+                    if (detailedUnit && detailedUnit.detailed_content) {
+                        detailedContent.innerHTML = `<h3>Detailed Content</h3>${detailedUnit.detailed_content}`;
+                    } else {
+                        detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available for this unit.</p>';
+                    }
+                } else {
+                    detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available.</p>';
+                }
+                
+                // Show the detailed content
+                detailedContent.style.display = 'block';
+            }
+            
+            // Update read more button text
+            if (readMoreBtn) {
+                readMoreBtn.textContent = 'Show Less';
+            }
+        } else {
+            // Hide the detailed content
+            if (detailedContent) {
+                detailedContent.style.display = 'none';
+            }
+            
+            // Update read more button text
+            if (readMoreBtn) {
+                readMoreBtn.textContent = 'Read More';
+            }
         }
     }
     
@@ -272,9 +543,39 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Add click event to read more buttons
     readMoreBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation(); // Prevent the micro-unit click event
+        btn.addEventListener('click', function() {
             const microUnit = this.closest('.micro-unit');
+            const unitNumber = microUnit.getAttribute('data-unit-number');
+            
+            // Force populate the detailed content before toggling
+            if (window.processedContent && window.processedContent.detailed_units) {
+                const detailedUnit = window.processedContent.detailed_units.find(
+                    du => du.unit_number.toString() === unitNumber
+                );
+                
+                if (detailedUnit && detailedUnit.detailed_content) {
+                    // Get or create the detailed-content element
+                    let detailedContent = microUnit.querySelector('.detailed-content');
+                    
+                    if (!detailedContent) {
+                        detailedContent = document.createElement('div');
+                        detailedContent.className = 'detailed-content';
+                        detailedContent.style.display = 'none';
+                        
+                        // Insert it before the read-more button
+                        this.insertAdjacentElement('beforebegin', detailedContent);
+                    }
+                    
+                    // Set the content if it's empty or minimal
+                    if (detailedContent.innerHTML.trim() === '' || 
+                        detailedContent.innerHTML.trim() === '<h3>Detailed Content</h3>' ||
+                        detailedContent.innerHTML.includes('No detailed content available')) {
+                        
+                        detailedContent.innerHTML = `<h3>Detailed Content</h3>${detailedUnit.detailed_content}`;
+                    }
+                }
+            }
+            
             toggleMicroUnit(microUnit);
         });
     });

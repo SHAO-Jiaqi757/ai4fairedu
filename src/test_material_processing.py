@@ -19,6 +19,7 @@ from unittest.mock import patch, MagicMock
 from src.user_profile import analyze_user_profile
 from src.adhd_support import micro_content_divider
 from src.dyslexia_support import syntax_simplifier
+from src.content_generator import content_generator
 from src.dashboard_analyzer import analyze_dashboard_data
 from src.config import SystemConfig
 
@@ -331,7 +332,32 @@ def test_material_processing(output_dir: str = None, verbose: bool = False, samp
         except Exception as e:
             print(f"❌ Error in Dyslexia support processing: {str(e)}")
     
-    # Step 6: Insight Generator - Generate learning insights
+    # Step 6: Content Generator - Generate detailed content for each unit
+    print("\n📚 Content Generator is creating detailed learning content...")
+    try:
+        content_gen_start_time = datetime.now()
+        state = content_generator(state)
+        content_gen_end_time = datetime.now()
+        content_gen_duration = (content_gen_end_time - content_gen_start_time).total_seconds()
+        
+        detailed_units = state['processed_content'].get('detailed_units', [])
+        print(f"✅ Content generation completed in {content_gen_duration:.2f} seconds")
+        print(f"Generated detailed content for {len(detailed_units)} units")
+        
+        if verbose and detailed_units:
+            print("\nDetailed content units:")
+            for i, unit in enumerate(detailed_units[:2], 1):  # Show just a couple of units
+                print(f"- Unit {i}:")
+                print(f"  • Unit number: {unit.get('unit_number', 'N/A')}")
+                print(f"  • Estimated time: {unit.get('estimated_time_minutes', 'N/A')} minutes")
+                print(f"  • Content length: {len(unit.get('detailed_content', ''))}")
+                # Print a snippet of the detailed content
+                content_snippet = unit.get('detailed_content', '')[:100] + '...' if len(unit.get('detailed_content', '')) > 100 else unit.get('detailed_content', '')
+                print(f"  • Content snippet: {content_snippet}")
+    except Exception as e:
+        print(f"❌ Error in content generation: {str(e)}")
+    
+    # Step 7: Insight Generator - Generate learning insights
     print("\n💡 Insight Generator is analyzing learning patterns...")
     try:
         insight_start_time = datetime.now()
@@ -367,7 +393,7 @@ def test_material_processing(output_dir: str = None, verbose: bool = False, samp
     except Exception as e:
         print(f"❌ Error in insight generation: {str(e)}")
     
-    # Step 7: Save results if output directory is specified
+    # Step 8: Save results if output directory is specified
     if output_dir:
         result_file = os.path.join(output_dir, f"material_processing_test_{sample_type}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json")
         try:
@@ -525,6 +551,18 @@ def test_process_material_route():
             assert "title" in first_section
             assert "content" in first_section
             assert "micro_units" in first_section  # For ADHD support
+            assert "detailed_units" in first_section  # For content generator
+            
+            # Check detailed units
+            assert "detailed_units" in processed_content
+            assert len(processed_content["detailed_units"]) > 0
+            
+            # Check the first detailed unit
+            first_detailed_unit = processed_content["detailed_units"][0]
+            assert "unit_number" in first_detailed_unit
+            assert "estimated_time_minutes" in first_detailed_unit
+            assert "summary" in first_detailed_unit
+            assert "detailed_content" in first_detailed_unit
             
             # Clean up test files
             if os.path.exists(material_file_path):
@@ -547,8 +585,38 @@ def create_mock_processed_content(original_text: str) -> Dict[str, Any]:
     for i, sentence in enumerate(sentences[:3]):  # Use first 3 sentences
         micro_units.append({
             "content": f"<p>{sentence}.</p>",
-            "estimated_time": 2,
+            "unit_number": i + 1,
+            "estimated_time_minutes": 2,
             "check_points": [f"What is the main point of this unit?"]
+        })
+    
+    # Create detailed units (for content generator)
+    detailed_units = []
+    for i, unit in enumerate(micro_units):
+        detailed_units.append({
+            "unit_number": unit["unit_number"],
+            "estimated_time_minutes": unit["estimated_time_minutes"],
+            "summary": unit["content"],
+            "detailed_content": f"""
+# Unit {i+1}: Detailed Content
+
+{sentences[i] if i < len(sentences) else 'Additional content for this unit.'}.
+
+## Key Points
+- This is an important concept in this unit
+- Here's another key point to understand
+- And a third point for completeness
+
+## Examples
+Here's an example that illustrates the main concept:
+- Example 1: Practical application
+- Example 2: Another scenario
+
+## Understanding Check
+{unit.get('check_points', ['What did you learn from this unit?'])[0]}
+
+**Answer**: The main point is to understand {sentences[i][:30]}...
+"""
         })
     
     # Create a simplified version (for dyslexia support)
@@ -580,6 +648,12 @@ def create_mock_processed_content(original_text: str) -> Dict[str, Any]:
             "estimated_reading_time_minutes": 2
         },
         "processed_content": {
+            "micro_units": micro_units,
+            "simplified_text": {
+                "content": simplified_content,
+                "vocabulary": vocabulary
+            },
+            "detailed_units": detailed_units,
             "sections": [
                 {
                     "id": "section-1",
@@ -587,6 +661,7 @@ def create_mock_processed_content(original_text: str) -> Dict[str, Any]:
                     "content": original_text,
                     "simplified_content": simplified_content,
                     "micro_units": micro_units,
+                    "detailed_units": detailed_units,
                     "key_concepts": ["Artificial Intelligence", "Intelligence", "Cognitive Skills"],
                     "vocabulary": vocabulary,
                     "estimated_time": 5,
@@ -602,6 +677,14 @@ def create_mock_processed_content(original_text: str) -> Dict[str, Any]:
             {
                 "step": "adhd_support",
                 "memory": ["Created micro-content units for ADHD support"]
+            },
+            {
+                "step": "dyslexia_support",
+                "memory": ["Applied syntax simplification for dyslexia support"]
+            },
+            {
+                "step": "content_generation_processor",
+                "memory": ["Generated detailed content for each micro unit"]
             }
         ],
         "current_focus": "end",
@@ -674,17 +757,20 @@ def test_learning_view_with_processed_content():
             # Check for section title
             assert 'Introduction to Artificial Intelligence' in html
             
-            # Check for key concepts
-            assert 'Artificial Intelligence' in html
-            assert 'Cognitive Skills' in html
+            # Check for micro units (ADHD support)
+            assert 'micro-unit' in html.lower() or 'micro unit' in html.lower()
             
-            # Check for vocabulary terms
-            assert 'artificial intelligence' in html
+            # Check for detailed content (Content Generator)
+            assert 'detailed content' in html.lower() or 'detailed-content' in html.lower()
+            assert 'key points' in html.lower()
+            assert 'understanding check' in html.lower()
             
-            # Check for view controls
-            assert 'Adapted View' in html
-            assert 'Original' in html
-            assert 'Side by Side' in html
+            # Check for simplified content (Dyslexia support)
+            assert 'simplified' in html.lower()
+            
+            # Check for vocabulary
+            assert 'vocabulary' in html.lower()
+            assert 'artificial intelligence' in html.lower()
 
 if __name__ == "__main__":
     # Run the tests
