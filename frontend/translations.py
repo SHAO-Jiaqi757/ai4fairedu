@@ -90,7 +90,7 @@ translations = {
         "en": {
             "site_title": "AI4FairEdu",
             "home": "Home",
-            "dashboard": "Dashboard",
+            "dashboard": "My",
             "materials": "Upload Materials",
             "questionnaire": "Questionnaire",
             "about": "About",
@@ -104,7 +104,7 @@ translations = {
         "zh": {
             "site_title": "AI4FairEdu",
             "home": "首页",
-            "dashboard": "仪表板",
+            "dashboard": "我的",
             "materials": "上传学习材料",
             "questionnaire": "问卷调查",
             "about": "关于我们",
@@ -217,7 +217,7 @@ translations = {
             "how_it_works_title": "How It Works",
             "how_it_works_text": "Our system analyzes your learning profile through a questionnaire and adapts learning materials to match your specific needs and preferences.",
             "team_title": "Our Team",
-            "team_text": "We are a team of educators, technologists, and researchers passionate about making education more inclusive and accessible.",
+            "team_text": "We are a team of AI Agents, including educators, technologists, and researchers passionate about making education more inclusive and accessible.",
             "contact_title": "Contact Us",
             "contact_text": "Have questions or feedback? We'd love to hear from you.",
             "contact_email": "Email: contact@ai4fairedu.org",
@@ -262,7 +262,7 @@ translations = {
             "how_it_works_title": "工作原理",
             "how_it_works_text": "我们的系统通过问卷调查分析您的学习档案，并根据您的特定需求和偏好调整学习材料。",
             "team_title": "我们的团队",
-            "team_text": "我们是一支由教育工作者、技术专家和研究人员组成的团队，热衷于使教育更具包容性和无障碍性。",
+            "team_text": "我们是一支由AI Agents组成的团队，包括教育工作者、技术专家和研究专家，热衷于使教育更具包容性和无障碍性。",
             "contact_title": "联系我们",
             "contact_text": "有问题或反馈？我们很乐意听取您的意见。",
             "contact_email": "电子邮件：contact@ai4fairedu.org",
@@ -460,7 +460,7 @@ translations = {
             "material_text": "Material Text",
             "placeholder": "Paste or type your learning material here...",
             "submit": "Process Material",
-            "back": "Back to Dashboard",
+            "back": "Back to My",
             "instructions": "Upload your learning material to receive a personalized version adapted to your learning profile. We support plain text and markdown formatting.",
             "file_upload": "Or upload a file",
             "supported_formats": "Supported formats: .txt, .md, .pdf",
@@ -518,7 +518,7 @@ translations = {
             "stop": "Stop",
             "reset": "Reset",
             "save_notes": "Save Notes",
-            "back": "Back to Dashboard"
+            "back": "Back to My"
         },
         "zh": {
             "title": "学习视图",
@@ -542,7 +542,7 @@ translations = {
             "subtitle": "Access your previously processed learning materials",
             "no_materials": "You haven't processed any learning materials yet.",
             "upload_new": "Upload New Material",
-            "back": "Back to Dashboard",
+            "back": "Back to My",
             "material_title": "Title",
             "processed_date": "Processed Date",
             "view": "View"
