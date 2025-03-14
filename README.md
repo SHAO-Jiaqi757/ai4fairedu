@@ -91,3 +91,10 @@ The application will be available at http://localhost:5000.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details. 
+
+
+## todo
+[x] dashboard language change
+[x] learning view language change
+[x] questionnaire language change
+[x] built-in accessibility tools to customize your learning experience, including font adjustments and high contrast mode.
