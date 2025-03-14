@@ -94,7 +94,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 
 ## todo
-[x] dashboard language change
-[x] learning view language change
-[x] questionnaire language change
-[x] built-in accessibility tools to customize your learning experience, including font adjustments and high contrast mode.
+[] translate http://10.201.8.114:5001/material-processing
+[] progress bar in material processing
