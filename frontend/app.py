@@ -527,12 +527,19 @@ def learning_view():
     results_dir = os.path.join(config.get("storage.results_path") or "data/results")
     results_file = os.path.join(results_dir, f"{user_id}_{material_id}_results.json")
     
+    # Initialize processed_date
+    processed_date = get_translation('learning_view', 'unknown_date', session.get('language', 'en'))
+    
     if os.path.exists(results_file):
         try:
             with open(results_file, 'r') as f:
                 results = json.load(f)
             material_title = results.get("learning_materials", {}).get("title", "Learning Material")
             session['current_material']['title'] = material_title
+            
+            # Get processed date from file modification time
+            processed_date = datetime.fromtimestamp(os.path.getmtime(results_file)).strftime('%Y-%m-%d %H:%M')
+            
         except Exception as e:
             print(f"Error loading results file: {str(e)}")
             material_title = session.get('current_material', {}).get('title', 'Learning Material')
@@ -654,7 +661,8 @@ def learning_view():
                           user_profile=user_profile,
                           processed_content=processed_content,
                           original_content=original_content,
-                          agents_used=agents_used)
+                          agents_used=agents_used,
+                          processed_date=processed_date)
 
 @app.route('/api/feedback', methods=['POST'])
 def submit_feedback():
@@ -945,7 +953,7 @@ def load_processed_content(user_id, material_id):
                 "id": "1",  # This ID will be used directly in the HTML
                 "title": material_title,
                 "content": original_text,
-                "estimated_time": len(original_text.split()) // 200 if original_text else 5,
+                "estimated_time": max(1, len(original_text) // 200) if original_text else 1,
                 "difficulty_level": "Standard"
             }
             
@@ -1039,7 +1047,7 @@ def load_processed_content(user_id, material_id):
                     "id": "1",
                     "title": "Content",
                     "content": original_text,
-                    "estimated_time": 5,
+                    "estimated_time": max(1, len(original_text.split()) // 200) if original_text else 1,
                     "difficulty_level": "Standard"
                 }]
             }
@@ -1091,7 +1099,14 @@ def materials_history():
                     
                     # Extract material info
                     material_title = results.get("learning_materials", {}).get("title", "Untitled Material")
-                    processed_date = results.get("metadata", {}).get("processed_date", "Unknown date")
+                    processed_date = results.get("metadata", {}).get("processed_date", get_translation('learning_view', 'unknown_date', session.get('language', 'en')))
+                    
+                    # If processed_date is still the unknown_date translation, try to get it from file modification time
+                    if processed_date == get_translation('learning_view', 'unknown_date', session.get('language', 'en')):
+                        try:
+                            processed_date = datetime.fromtimestamp(os.path.getmtime(results_file)).strftime('%Y-%m-%d %H:%M')
+                        except:
+                            pass
                     
                     # Format the date if it's a timestamp
                     try:

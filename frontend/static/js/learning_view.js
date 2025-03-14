@@ -894,89 +894,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Function to toggle micro-unit expansion
     function toggleMicroUnit(microUnit) {
-        const unitNumber = microUnit.getAttribute('data-unit-number');
-        
-        // Close any other expanded units
-        document.querySelectorAll('.micro-unit.expanded').forEach(unit => {
-            if (unit !== microUnit) {
-                unit.classList.remove('expanded');
-                unit.querySelector('.unit-content').classList.add('collapsed');
-                // Hide detailed content for other units
-                const detailedContent = unit.querySelector('.detailed-content');
-                if (detailedContent) {
-                    detailedContent.style.display = 'none';
-                }
-                // Reset read more button text
-                const readMoreBtn = unit.querySelector('.read-more-btn');
-                if (readMoreBtn) {
-                    readMoreBtn.textContent = 'Read More';
-                }
-            }
-        });
-        
-        // Toggle current unit
-        const isExpanding = !microUnit.classList.contains('expanded');
-        microUnit.classList.toggle('expanded');
-        microUnit.querySelector('.unit-content').classList.toggle('collapsed');
-        
-        // Toggle detailed content visibility
-        let detailedContent = microUnit.querySelector('.detailed-content');
+        const unitContent = microUnit.querySelector('.unit-content');
         const readMoreBtn = microUnit.querySelector('.read-more-btn');
+        const detailedContent = microUnit.querySelector('.detailed-content');
         
-        if (isExpanding) {
-            // Check if the detailed content element exists and has content
-            if (detailedContent && detailedContent.innerHTML.length > 100) {
-                // The detailed content already exists in the DOM, just show it
-                detailedContent.style.display = 'block';
-            } else {
-                // If we don't have a detailed content element or it's empty, try to create/populate it
-                
-                // If we don't have a detailed content element, create one
-                if (!detailedContent) {
-                    detailedContent = document.createElement('div');
-                    detailedContent.className = 'detailed-content';
-                    
-                    // Insert it after the unit-content and before the read-more-btn
-                    const unitContent = microUnit.querySelector('.unit-content');
-                    if (unitContent && readMoreBtn) {
-                        readMoreBtn.insertAdjacentElement('beforebegin', detailedContent);
-                    } else {
-                        microUnit.appendChild(detailedContent);
-                    }
-                }
-                
-                // Find the matching detailed unit
-                if (window.processedContent && window.processedContent.detailed_units) {
-                    const detailedUnit = window.processedContent.detailed_units.find(
-                        du => du.unit_number.toString() === unitNumber
-                    );
-                    
-                    if (detailedUnit && detailedUnit.detailed_content) {
-                        detailedContent.innerHTML = `<h3>Detailed Content</h3>${detailedUnit.detailed_content}`;
-                    } else {
-                        detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available for this unit.</p>';
-                    }
-                } else {
-                    detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available.</p>';
-                }
-                
-                // Show the detailed content
-                detailedContent.style.display = 'block';
+        if (microUnit.classList.contains('expanded')) {
+            // Collapse the unit
+            microUnit.classList.remove('expanded');
+            unitContent.classList.add('collapsed');
+            unitContent.classList.remove('expanded');
+            
+            // Update read more button
+            if (readMoreBtn) {
+                // Get the translation from a data attribute or use a default
+                const readMoreText = document.documentElement.getAttribute('data-read-more-text') || 'Read More';
+                readMoreBtn.textContent = readMoreText;
             }
             
-            // Update read more button text
-            if (readMoreBtn) {
-                readMoreBtn.textContent = 'Show Less';
-            }
-        } else {
-            // Hide the detailed content
+            // Hide detailed content
             if (detailedContent) {
                 detailedContent.style.display = 'none';
             }
+        } else {
+            // Expand the unit
+            microUnit.classList.add('expanded');
+            unitContent.classList.remove('collapsed');
+            unitContent.classList.add('expanded');
             
-            // Update read more button text
+            // Update read more button
             if (readMoreBtn) {
-                readMoreBtn.textContent = 'Read More';
+                // Get the translation from a data attribute or use a default
+                const closeText = document.documentElement.getAttribute('data-close-text') || 'Close';
+                readMoreBtn.textContent = closeText;
+            }
+            
+            // Show detailed content
+            if (detailedContent) {
+                detailedContent.style.display = 'block';
             }
         }
     }
@@ -1077,18 +1031,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Function to save unit progress to localStorage
+    // Function to save unit progress
     function saveUnitProgress(unitId, completed) {
-        const userId = document.body.dataset.userId || 'anonymous';
-        const storageKey = `ai4fairedu_progress_${userId}`;
+        // Get the unit element
+        const unit = document.querySelector(`.micro-unit[data-unit-number="${unitId}"]`);
+        if (!unit) return;
         
-        let progress = JSON.parse(localStorage.getItem(storageKey) || '{}');
-        progress[unitId] = {
-            completed: completed,
-            timestamp: new Date().toISOString()
-        };
+        // Update the UI
+        const statusElement = unit.querySelector('.completion-status');
+        const completeButton = unit.querySelector('.mark-complete-btn');
         
-        localStorage.setItem(storageKey, JSON.stringify(progress));
+        if (completed) {
+            unit.classList.add('completed');
+            if (statusElement) {
+                // Get the translation from a data attribute or use a default
+                const completedText = document.documentElement.getAttribute('data-completed-text') || 'Completed';
+                statusElement.textContent = completedText;
+            }
+            if (completeButton) {
+                completeButton.classList.add('completed');
+            }
+        } else {
+            unit.classList.remove('completed');
+            if (statusElement) {
+                // Get the translation from a data attribute or use a default
+                const notStartedText = document.documentElement.getAttribute('data-not-started-text') || 'Not started';
+                statusElement.textContent = notStartedText;
+            }
+            if (completeButton) {
+                completeButton.classList.remove('completed');
+            }
+        }
+        
+        // Save to localStorage
+        const storageKey = `unit_${unitId}_progress`;
+        localStorage.setItem(storageKey, completed ? 'completed' : 'not_started');
+        
+        // Check if the section is complete
+        const section = unit.closest('.content-section');
+        if (section) {
+            checkSectionCompletion(section);
+        }
     }
     
     // Function to check if all units in a section are completed

@@ -1599,4 +1599,24 @@
 
 .content-section.active {
     display: block;
+}
+
+.material-meta {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.stat {
+    display: inline-block;
+    margin-right: 1.5rem;
+}
+
+.stat-label {
+    font-weight: 500;
+    margin-right: 0.5rem;
+}
+
+.stat-value {
+    color: #333;
 } 

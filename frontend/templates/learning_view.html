@@ -4,6 +4,13 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/learning_view.css') }}">
+<script>
+    // Store translations as data attributes on the document
+    document.documentElement.setAttribute('data-read-more-text', "{{ t('learning_view', 'read_more') }}");
+    document.documentElement.setAttribute('data-close-text', "{{ t('learning_view', 'close') }}");
+    document.documentElement.setAttribute('data-completed-text', "{{ t('learning_view', 'completed') }}");
+    document.documentElement.setAttribute('data-not-started-text', "{{ t('learning_view', 'not_started') }}");
+</script>
 {% endblock %}
 
 {% block content %}
@@ -11,8 +18,15 @@
     <div class="learning-view-header">
         <h1>{{ material_title }}</h1>
         <div class="view-controls">
-            <button id="toggle-original" class="btn btn-outline-primary">Show Original</button>
-            <button id="toggle-processed" class="btn btn-primary active">Show Processed</button>
+            <button id="toggle-original" class="btn btn-outline-primary">{{ t('learning_view', 'original') }}</button>
+            <button id="toggle-processed" class="btn btn-primary active">{{ t('learning_view', 'adapted') }}</button>
+            <button id="debug-content" class="btn btn-danger">Debug</button>
+        </div>
+        <div class="material-meta">
+            <div class="stat">
+                <span class="stat-label">{{ t('learning_view', 'processed_date') }}</span>
+                <span class="stat-value">{{ processed_date }}</span>
+            </div>
         </div>
     </div>
 
@@ -32,32 +46,32 @@
             <!-- Left Sidebar -->
             <aside class="learning-sidebar">
                 <div class="user-profile">
-                    <h3>Learning Profile</h3>
+                    <h3>{{ t('learning_view', 'learning_profile') }}</h3>
                     <div class="profile-details">
                         <div class="profile-item">
-                            <span class="label">Learning Type:</span>
-                            <span class="value">{{ user_profile.difficulty_type }}</span>
+                            <span class="label">{{ t('learning_view', 'learning_type') }}:</span>
+                            <span class="value">{{ t('learning_view', user_profile.difficulty_type|lower) }}</span>
                         </div>
                         <div class="profile-item">
-                            <span class="label">Support Level:</span>
-                            <span class="value">{{ user_profile.support_level }}</span>
+                            <span class="label">{{ t('learning_view', 'support_level') }}:</span>
+                            <span class="value">{{ t('learning_view', user_profile.support_level|lower) }}</span>
                         </div>
                     </div>
                 </div>
 
                 <nav class="content-nav">
-                    <h3>Content Sections</h3>
+                    <h3>{{ t('learning_view', 'content_sections') }}</h3>
                     <ul class="nav-list">
                         {% if processed_content.sections %}
                             {% for section in processed_content.sections %}
                             <li class="nav-item {% if loop.first %}active{% endif %}" data-section="{{ section.id }}">
                                 <span class="section-title">{{ section.title }}</span>
-                                <span class="section-meta">{{ section.estimated_time }}min</span>
+                                <span class="section-meta">{{ section.estimated_time }}{{ t('learning_view', 'min') }}</span>
                             </li>
                             {% endfor %}
                         {% else %}
                             <li class="nav-item active" data-section="default">
-                                <span class="section-title">Content</span>
+                                <span class="section-title">{{ t('learning_view', 'title') }}</span>
                                 <span class="section-meta">N/A</span>
                             </li>
                         {% endif %}
@@ -65,23 +79,23 @@
                 </nav>
 
                 <div class="learning-tools">
-                    <h3>Learning Tools</h3>
+                    <h3>{{ t('learning_view', 'learning_tools') }}</h3>
                     <div class="tools-grid">
                         <!-- <button class="tool-btn" data-tool="focus">
                             <i class="fas fa-eye"></i>
-                            <span>Focus Mode</span>
+                            <span>{{ t('learning_view', 'focus_mode') }}</span>
                         </button>
                         <button class="tool-btn" data-tool="tts">
                             <i class="fas fa-volume-up"></i>
-                            <span>Read Aloud</span>
+                            <span>{{ t('learning_view', 'read_aloud') }}</span>
                         </button> -->
                         <button class="tool-btn" data-tool="notes">
                             <i class="fas fa-sticky-note"></i>
-                            <span>Notes</span>
+                            <span>{{ t('learning_view', 'notes') }}</span>
                         </button>
                         <button class="tool-btn" data-tool="timer">
                             <i class="fas fa-clock"></i>
-                            <span>Timer</span>
+                            <span>{{ t('learning_view', 'timer') }}</span>
                         </button>
                     </div>
                 </div>
@@ -99,14 +113,14 @@
                                 <div class="section-header">
                                     <h2>{{ section.title }}</h2>
                                     <div class="section-meta">
-                                        <span class="reading-time">{{ section.estimated_time }}min read</span>
-                                        <span class="difficulty">{{ section.difficulty_level }}</span>
+                                        <span class="reading-time">{{ section.estimated_time }} {{ t('learning_view', 'reading_time') }}</span>
+                                        <span class="difficulty">{{ t('learning_view', 'difficulty') }}: {{ t('learning_view', section.difficulty_level|lower) }}</span>
                                     </div>
                                 </div>
 
                                 {% if section.key_concepts %}
                                 <div class="key-concepts">
-                                    <h3>Key Concepts</h3>
+                                    <h3>{{ t('learning_view', 'key_concepts') }}</h3>
                                     <ul class="concept-list">
                                         {% for concept in section.key_concepts %}
                                         <li>{{ concept }}</li>
@@ -120,16 +134,16 @@
                                     {% for unit in section.micro_units %}
                                     <div class="micro-unit" data-unit-number="{{ unit.unit_number }}">
                                         <div class="unit-header">
-                                            <span class="unit-number">Unit {{ loop.index }}</span>
-                                            <span class="unit-time">{{ unit.estimated_time if unit.estimated_time is defined else unit.estimated_time_minutes if unit.estimated_time_minutes is defined else 2 }}min</span>
+                                            <span class="unit-number">{{ t('learning_view', 'unit') }} {{ loop.index }}</span>
+                                            <span class="unit-time">{{ unit.estimated_time if unit.estimated_time is defined else unit.estimated_time_minutes if unit.estimated_time_minutes is defined else 2 }}{{ t('learning_view', 'min') }}</span>
                                             <button class="close-unit-btn"><i class="fas fa-times"></i></button>
                                         </div>
                                         <div class="unit-content collapsed">
                                             {{ unit.content | safe }}
                                         </div>
-                                        <button class="read-more-btn">Read More</button>
+                                        <button class="read-more-btn">{{ t('learning_view', 'read_more') }}</button>
                                         <div class="detailed-content" style="display: none;">
-                                            <h3>Detailed Content</h3>
+                                            <h3>{{ t('learning_view', 'detailed_content') }}</h3>
                                             {% set found_detailed = false %}
                                             
                                             {% if section.detailed_units %}
@@ -141,26 +155,17 @@
                                                 {% endfor %}
                                             {% endif %}
                                             
-                                            <!-- {% if not found_detailed and processed_content.detailed_units %}
-                                                {% for detailed_unit in processed_content.detailed_units %}
-                                                    {% if detailed_unit.unit_number == unit.unit_number %}
-                                                        {{ detailed_unit.detailed_content | safe }}
-                                                        {% set found_detailed = true %}
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
-                                            
                                             {% if not found_detailed %}
-                                                <p>No detailed content available for this unit.</p>
-                                            {% endif %} -->
+                                                <p>{{ t('learning_view', 'no_detailed_content') }}</p>
+                                            {% endif %}
                                         </div>
                                         <div class="unit-progress">
-                                            <button class="mark-complete-btn">Mark as Complete</button>
-                                            <span class="completion-status">Not started</span>
+                                            <button class="mark-complete-btn">{{ t('learning_view', 'mark_complete') }}</button>
+                                            <span class="completion-status">{{ t('learning_view', 'not_started') }}</span>
                                         </div>
                                         {% if unit.check_points %}
                                         <div class="check-points">
-                                            <h4>Check Your Understanding</h4>
+                                            <h4>{{ t('learning_view', 'check_understanding') }}</h4>
                                             <ul>
                                                 {% for point in unit.check_points %}
                                                 <li>{{ point }}</li>
@@ -169,7 +174,7 @@
                                         </div>
                                         {% elif unit.key_points %}
                                         <div class="check-points">
-                                            <h4>Key Points</h4>
+                                            <h4>{{ t('learning_view', 'key_points') }}</h4>
                                             <ul>
                                                 {% for point in unit.key_points %}
                                                 <li>{{ point }}</li>
@@ -178,7 +183,7 @@
                                         </div>
                                         {% elif unit.check_questions %}
                                         <div class="check-points">
-                                            <h4>Check Your Understanding</h4>
+                                            <h4>{{ t('learning_view', 'check_understanding') }}</h4>
                                             <ul>
                                                 {% for question in unit.check_questions %}
                                                 <li>{{ question }}</li>
@@ -201,7 +206,7 @@
 
                                 {% if section.vocabulary %}
                                 <div class="vocabulary">
-                                    <h3>Key Terms</h3>
+                                    <h3>{{ t('learning_view', 'key_terms') }}</h3>
                                     <div class="vocabulary-grid">
                                         {% for term, definition in section.vocabulary.items() %}
                                         <div class="vocabulary-item">
@@ -271,33 +276,33 @@
 
                 <!-- Notes Panel -->
                 <div class="tool-panel" id="notes-panel">
-                    <h3>Notes</h3>
+                    <h3>{{ t('learning_view', 'notes') }}</h3>
                     <div class="tool-controls">
-                        <textarea id="notes-area" placeholder="Take notes here..."></textarea>
+                        <textarea id="notes-area" placeholder="{{ t('learning_view', 'take_notes') }}"></textarea>
                         <div class="notes-actions">
-                            <button id="save-notes">Save</button>
-                            <button id="clear-notes">Clear</button>
+                            <button id="save-notes">{{ t('learning_view', 'save_notes') }}</button>
+                            <button id="clear-notes">{{ t('learning_view', 'clear') }}</button>
                         </div>
                     </div>
                 </div>
 
                 <!-- Timer Panel -->
                 <div class="tool-panel" id="timer-panel">
-                    <h3>Study Timer</h3>
+                    <h3>{{ t('learning_view', 'study_timer') }}</h3>
                     <div class="tool-controls">
                         <div class="timer-display">
                             <span id="minutes">25</span>:<span id="seconds">00</span>
                         </div>
                         <div class="timer-presets">
-                            <button data-time="5">5m</button>
-                            <button data-time="15">15m</button>
-                            <button data-time="25" class="active">25m</button>
-                            <button data-time="45">45m</button>
+                            <button data-time="5">5{{ t('learning_view', 'min') }}</button>
+                            <button data-time="15">15{{ t('learning_view', 'min') }}</button>
+                            <button data-time="25" class="active">25{{ t('learning_view', 'min') }}</button>
+                            <button data-time="45">45{{ t('learning_view', 'min') }}</button>
                         </div>
                         <div class="timer-controls">
-                            <button id="start-timer">Start</button>
-                            <button id="pause-timer">Pause</button>
-                            <button id="reset-timer">Reset</button>
+                            <button id="start-timer">{{ t('learning_view', 'start') }}</button>
+                            <button id="pause-timer">{{ t('learning_view', 'pause') }}</button>
+                            <button id="reset-timer">{{ t('learning_view', 'reset') }}</button>
                         </div>
                     </div>
                 </div>
@@ -307,9 +312,9 @@
 </div>
 
 <!-- Agent Explanation Panel -->
-{% if agents_used %}
+<!-- {% if agents_used %}
 <div class="agent-explanation">
-    <h3>How This Content Was Adapted For You</h3>
+    <h3>{{ t('learning_view', 'how_adapted') }}</h3>
     <div class="agent-cards">
         {% for agent in agents_used %}
         <div class="agent-card">
@@ -322,14 +327,14 @@
         {% endfor %}
     </div>
 </div>
-{% endif %}
+{% endif %} -->
 
 
 <!-- Replace with a modal for original content -->
 <div id="original-content-modal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
-            <h2>Original Content</h2>
+            <h2>{{ t('learning_view', 'original_content') }}</h2>
             <span class="close-modal">&times;</span>
         </div>
         <div class="modal-body">
