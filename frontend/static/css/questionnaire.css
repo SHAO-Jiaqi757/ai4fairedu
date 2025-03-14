@@ -226,4 +226,26 @@
     .form-navigation button {
         width: 100%;
     }
+}
+
+.language-notice {
+    background-color: var(--color-info-light);
+    border-left: 4px solid var(--color-info);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.language-notice p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.language-notice .btn-small {
+    margin-left: var(--spacing-md);
+    white-space: nowrap;
 } 

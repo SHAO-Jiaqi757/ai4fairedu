@@ -6,21 +6,72 @@
 document.addEventListener('DOMContentLoaded', function() {
     console.log("Learning view script loaded");
     
+    // // Debug: Check content sections
+    // const debugContentSections = document.querySelectorAll('.content-section');
+    // console.log(`Found ${debugContentSections.length} content sections`);
+    // debugContentSections.forEach((section, index) => {
+    //     console.log(`Section ${index + 1}:`);
+    //     console.log(`  - ID: ${section.id}`);
+    //     console.log(`  - Classes: ${section.className}`);
+    //     console.log(`  - Display: ${window.getComputedStyle(section).display}`);
+    //     console.log(`  - Visibility: ${window.getComputedStyle(section).visibility}`);
+    //     console.log(`  - Content HTML length: ${section.innerHTML.length}`);
+    // });
+    
+    // Immediately ensure content sections are displayed
+    ensureContentSectionsDisplayed();
+    
+    // Immediately populate detailed content
+    populateAllDetailedContent();
+    
+    // // Debug: Check if processedContent is available
+    // if (window.processedContent) {
+    //     console.log("processedContent is available:", window.processedContent);
+    //     if (window.processedContent.sections) {
+    //         console.log("Sections found:", window.processedContent.sections.length);
+    //     }
+    //     if (window.processedContent.detailed_units) {
+    //         console.log("Detailed units found:", window.processedContent.detailed_units.length);
+    //     }
+    // } else {
+    //     console.log("processedContent is not available");
+    // }
+    
+    // // Debug: Check content views
+    // const debugContentViews = document.querySelectorAll('.content-view');
+    // console.log(`Found ${debugContentViews.length} content views`);
+    // debugContentViews.forEach((view, index) => {
+    //     console.log(`View ${index + 1}:`);
+    //     console.log(`  - Classes: ${view.className}`);
+    //     console.log(`  - Display: ${window.getComputedStyle(view).display}`);
+    //     console.log(`  - Visibility: ${window.getComputedStyle(view).visibility}`);
+    //     console.log(`  - Content HTML length: ${view.innerHTML.length}`);
+    // });
+    
     // Function to populate all detailed content elements
     function populateAllDetailedContent() {
+        console.log("Populating all detailed content elements");
+        
         // First check if we have detailed_units in window.processedContent
         if (!window.processedContent || !window.processedContent.detailed_units) {
+            console.log("No detailed_units found in window.processedContent");
             return;
         }
         
+        console.log(`Found ${window.processedContent.detailed_units.length} detailed units in window.processedContent`);
+        
         // Force populate all detailed content elements
         const microUnits = document.querySelectorAll('.micro-unit');
+        console.log(`Found ${microUnits.length} micro-units in the DOM`);
+        
         let populatedCount = 0;
         
-        microUnits.forEach(unit => {
+        microUnits.forEach((unit, index) => {
             const unitNumber = unit.getAttribute('data-unit-number');
+            console.log(`Processing micro-unit ${index + 1} with unit number ${unitNumber}`);
             
             if (!unitNumber) {
+                console.log(`  - No unit number found, skipping`);
                 return;
             }
             
@@ -30,6 +81,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Check if the detailed content already exists and has content
             if (detailedContent && detailedContent.innerHTML.length > 100 && 
                 !detailedContent.innerHTML.includes('No detailed content available')) {
+                console.log(`  - Detailed content already exists with length ${detailedContent.innerHTML.length}`);
                 populatedCount++;
                 return;
             }
@@ -40,11 +92,15 @@ document.addEventListener('DOMContentLoaded', function() {
             );
             
             if (!detailedUnit) {
+                console.log(`  - No matching detailed unit found for unit number ${unitNumber}`);
                 return;
             }
             
+            console.log(`  - Found matching detailed unit with content length ${detailedUnit.detailed_content ? detailedUnit.detailed_content.length : 0}`);
+            
             // Create the detailed-content element if it doesn't exist
             if (!detailedContent) {
+                console.log(`  - Creating new detailed-content element`);
                 detailedContent = document.createElement('div');
                 detailedContent.className = 'detailed-content';
                 detailedContent.style.display = 'none';
@@ -61,11 +117,15 @@ document.addEventListener('DOMContentLoaded', function() {
             // Set the content
             if (detailedUnit.detailed_content) {
                 detailedContent.innerHTML = `<h3>Detailed Content</h3>${detailedUnit.detailed_content}`;
+                console.log(`  - Populated detailed content with length ${detailedContent.innerHTML.length}`);
                 populatedCount++;
             } else {
                 detailedContent.innerHTML = '<h3>Detailed Content</h3><p>No detailed content available for this unit.</p>';
+                console.log(`  - No detailed content available for this unit`);
             }
         });
+        
+        console.log(`Populated ${populatedCount} detailed content elements`);
     }
 
     // Debug: Check for detailed units in the processed_content
@@ -207,8 +267,266 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Debug button
+    const debugButton = document.getElementById('debug-content');
+    if (debugButton) {
+        debugButton.addEventListener('click', function() {
+            console.log("Debug button clicked");
+            
+            // Check content sections
+            const debugSections = document.querySelectorAll('.content-section');
+            console.log(`Found ${debugSections.length} content sections`);
+            
+            if (debugSections.length === 0) {
+                console.log("No content sections found. Creating a test section.");
+                
+                // Create a test section
+                const contentView = document.querySelector('.content-view.active');
+                if (contentView) {
+                    const testSection = document.createElement('div');
+                    testSection.className = 'content-section active';
+                    testSection.id = 'test';  // Use simple ID without prefix
+                    testSection.innerHTML = '<div class="section-header"><h2>Test Section</h2></div><div class="section-content"><p>This is a test section to debug the content display issue.</p></div>';
+                    contentView.appendChild(testSection);
+                    console.log("Test section created.");
+                } else {
+                    console.log("No active content view found.");
+                }
+            } else {
+                // Make all sections visible for debugging
+                debugSections.forEach(section => {
+                    section.style.display = 'block';
+                    section.style.visibility = 'visible';
+                    console.log(`Made section ${section.id} visible.`);
+                    
+                    // Check for micro-units in this section
+                    const sectionMicroUnits = section.querySelectorAll('.micro-unit');
+                    if (sectionMicroUnits.length > 0) {
+                        console.log(`Found ${sectionMicroUnits.length} micro-units in section ${section.id}`);
+                        
+                        // Make all micro-units visible
+                        sectionMicroUnits.forEach((unit, index) => {
+                            unit.style.display = 'block';
+                            unit.style.visibility = 'visible';
+                            console.log(`Made micro-unit ${index + 1} in section ${section.id} visible`);
+                        });
+                    } else {
+                        console.log(`No micro-units found in section ${section.id}`);
+                    }
+                });
+            }
+            
+            // Check processed content
+            if (window.processedContent) {
+                console.log("Processed content:", window.processedContent);
+                
+                // Check if sections exist
+                if (window.processedContent.sections) {
+                    console.log("Sections found:", window.processedContent.sections.length);
+                    
+                    // Check section IDs
+                    window.processedContent.sections.forEach((section, index) => {
+                        console.log(`Section ${index + 1} ID: ${section.id}`);
+                        
+                        // Check if the section element exists in the DOM
+                        const sectionElement = document.getElementById(section.id);
+                        if (sectionElement) {
+                            console.log(`  - Section element found with ID: ${section.id}`);
+                            
+                            // Check if this section has micro_units in the processed content
+                            if (section.micro_units) {
+                                console.log(`  - Section has ${section.micro_units.length} micro_units in processed content`);
+                                
+                                // Check if micro-units exist in the DOM
+                                const microUnits = sectionElement.querySelectorAll('.micro-unit');
+                                console.log(`  - Section has ${microUnits.length} micro-units in the DOM`);
+                                
+                                // If there's a mismatch, try to create the missing micro-units
+                                if (microUnits.length === 0 && section.micro_units.length > 0) {
+                                    console.log(`  - Creating missing micro-units for section ${section.id}`);
+                                    
+                                    // Create a container for micro-units if it doesn't exist
+                                    let microUnitsContainer = sectionElement.querySelector('.micro-units');
+                                    if (!microUnitsContainer) {
+                                        microUnitsContainer = document.createElement('div');
+                                        microUnitsContainer.className = 'micro-units';
+                                        sectionElement.appendChild(microUnitsContainer);
+                                    }
+                                    
+                                    // Create micro-units
+                                    section.micro_units.forEach((unit, unitIndex) => {
+                                        const microUnit = document.createElement('div');
+                                        microUnit.className = 'micro-unit';
+                                        microUnit.setAttribute('data-unit-number', unit.unit_number);
+                                        
+                                        // Create unit header
+                                        const unitHeader = document.createElement('div');
+                                        unitHeader.className = 'unit-header';
+                                        unitHeader.innerHTML = `
+                                            <span class="unit-number">Unit ${unitIndex + 1}</span>
+                                            <span class="unit-time">${unit.estimated_time || 2}min</span>
+                                            <button class="close-unit-btn"><i class="fas fa-times"></i></button>
+                                        `;
+                                        
+                                        // Create unit content
+                                        const unitContent = document.createElement('div');
+                                        unitContent.className = 'unit-content collapsed';
+                                        unitContent.innerHTML = unit.content || 'No content available';
+                                        
+                                        // Create read more button
+                                        const readMoreBtn = document.createElement('button');
+                                        readMoreBtn.className = 'read-more-btn';
+                                        readMoreBtn.textContent = 'Read More';
+                                        
+                                        // Create unit progress
+                                        const unitProgress = document.createElement('div');
+                                        unitProgress.className = 'unit-progress';
+                                        unitProgress.innerHTML = `
+                                            <button class="mark-complete-btn">Mark as Complete</button>
+                                            <span class="completion-status">Not started</span>
+                                        `;
+                                        
+                                        // Assemble micro-unit
+                                        microUnit.appendChild(unitHeader);
+                                        microUnit.appendChild(unitContent);
+                                        microUnit.appendChild(readMoreBtn);
+                                        microUnit.appendChild(unitProgress);
+                                        
+                                        // Add to container
+                                        microUnitsContainer.appendChild(microUnit);
+                                    });
+                                    
+                                    console.log(`  - Created ${section.micro_units.length} micro-units for section ${section.id}`);
+                                }
+                            }
+                        } else {
+                            console.log(`  - Section element NOT found with ID: ${section.id}`);
+                        }
+                    });
+                }
+                
+                // Check for detailed units
+                if (window.processedContent.detailed_units) {
+                    console.log(`Found ${window.processedContent.detailed_units.length} detailed units in processed content`);
+                    
+                    // Force populate all detailed content
+                    populateAllDetailedContent();
+                }
+            } else {
+                console.log("No processed content available.");
+            }
+            
+            // Ensure content sections are displayed
+            ensureContentSectionsDisplayed();
+        });
+    }
+    
     // Call populateAllDetailedContent with a delay to ensure the DOM is fully loaded
     setTimeout(populateAllDetailedContent, 1000);
+    
+    // Ensure content sections are properly displayed
+    function ensureContentSectionsDisplayed() {
+        console.log("Ensuring content sections are properly displayed");
+        
+        // Check if the content-area is properly displayed
+        const contentArea = document.querySelector('.content-area');
+        if (contentArea) {
+            console.log("Content area found");
+            contentArea.style.display = 'block';
+            contentArea.style.visibility = 'visible';
+        } else {
+            console.log("Content area not found");
+        }
+        
+        // Check if there are any content sections
+        const sections = document.querySelectorAll('.content-section');
+        console.log(`Found ${sections.length} content sections`);
+        
+        if (sections.length === 0) {
+            console.log("No content sections found");
+            
+            // Create a default section if none exists
+            const contentView = document.querySelector('.content-view.active');
+            if (contentView) {
+                console.log("Creating a default section");
+                const defaultSection = document.createElement('div');
+                defaultSection.className = 'content-section active';
+                defaultSection.id = 'default';
+                
+                // Add content from original_content if available
+                const originalContent = document.querySelector('#original-content-modal .modal-body');
+                if (originalContent) {
+                    defaultSection.innerHTML = `
+                        <div class="section-header">
+                            <h2>Content</h2>
+                        </div>
+                        <div class="section-content">
+                            ${originalContent.innerHTML}
+                        </div>
+                    `;
+                } else {
+                    defaultSection.innerHTML = `
+                        <div class="section-header">
+                            <h2>Content</h2>
+                        </div>
+                        <div class="section-content">
+                            <p>No content available. Please try refreshing the page.</p>
+                        </div>
+                    `;
+                }
+                
+                contentView.appendChild(defaultSection);
+                console.log("Default section created");
+            }
+            
+            return;
+        }
+        
+        // Make all sections visible for debugging
+        sections.forEach(section => {
+            console.log(`Processing section ${section.id}`);
+            section.style.display = 'block';
+            section.style.visibility = 'visible';
+        });
+        
+        // Check if any section is active
+        let activeSection = document.querySelector('.content-section.active');
+        if (!activeSection) {
+            console.log("No active section found, activating the first one");
+            activeSection = sections[0];
+            activeSection.classList.add('active');
+        }
+        
+        // Make sure the active section is displayed
+        activeSection.style.display = 'block';
+        activeSection.style.visibility = 'visible';
+        console.log(`Active section ${activeSection.id} is now visible`);
+        
+        // Make sure the content view is active
+        const contentView = document.querySelector('.content-view');
+        if (contentView) {
+            contentView.classList.add('active');
+            contentView.style.display = 'block';
+            contentView.style.visibility = 'visible';
+            console.log("Content view is now visible");
+        }
+        
+        // Check for micro-units
+        const microUnits = document.querySelectorAll('.micro-unit');
+        console.log(`Found ${microUnits.length} micro-units`);
+        
+        if (microUnits.length > 0) {
+            // Make sure micro-units are visible
+            microUnits.forEach((unit, index) => {
+                unit.style.display = 'block';
+                unit.style.visibility = 'visible';
+                console.log(`Made micro-unit ${index + 1} visible`);
+            });
+        }
+    }
+    
+    // Call the function after a delay to ensure the DOM is fully loaded
+    setTimeout(ensureContentSectionsDisplayed, 1500);
     
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -231,14 +549,48 @@ document.addEventListener('DOMContentLoaded', function() {
     navItems.forEach(item => {
         item.addEventListener('click', function() {
             const sectionId = this.getAttribute('data-section');
+            console.log(`Navigation item clicked for section: ${sectionId}`);
             
             // Update active nav item
             navItems.forEach(item => item.classList.remove('active'));
             this.classList.add('active');
             
             // Show selected section
-            contentSections.forEach(section => section.classList.remove('active'));
-            document.getElementById(`section-${sectionId}`).classList.add('active');
+            contentSections.forEach(section => {
+                section.classList.remove('active');
+                section.style.display = 'none';
+            });
+            
+            // Use the section ID directly
+            const targetSection = document.getElementById(sectionId);
+            
+            if (targetSection) {
+                console.log(`Found target section with ID: ${sectionId}`);
+                targetSection.classList.add('active');
+                targetSection.style.display = 'block';
+                targetSection.style.visibility = 'visible';
+                
+                // Check if this section has micro-units
+                const microUnits = targetSection.querySelectorAll('.micro-unit');
+                console.log(`Found ${microUnits.length} micro-units in section ${sectionId}`);
+                
+                // Make sure micro-units are visible
+                microUnits.forEach(unit => {
+                    unit.style.display = 'block';
+                    unit.style.visibility = 'visible';
+                });
+            } else {
+                console.error(`Section with ID ${sectionId} not found`);
+                
+                // Try with section- prefix as fallback
+                const fallbackSection = document.getElementById(`section-${sectionId}`);
+                if (fallbackSection) {
+                    console.log(`Found fallback section with ID: section-${sectionId}`);
+                    fallbackSection.classList.add('active');
+                    fallbackSection.style.display = 'block';
+                    fallbackSection.style.visibility = 'visible';
+                }
+            }
         });
     });
     

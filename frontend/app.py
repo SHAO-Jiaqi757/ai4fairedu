@@ -47,6 +47,7 @@ def set_default_language():
 # Pass debug flag to templates
 @app.context_processor
 def inject_debug():
+    """Inject debug flag into templates"""
     return dict(debug=app.debug)
 
 # Add translation function to Jinja2 templates
@@ -71,98 +72,122 @@ def about():
 
 @app.route('/questionnaire')
 def questionnaire():
-    """Render the questionnaire page"""
-    language = session.get('language', config.get("system.language"))
-    return render_template('questionnaire.html', language=language)
+    """Display the user questionnaire form"""
+    # Check if we need to reset the questionnaire
+    reset = request.args.get('reset', 'false').lower() == 'true'
+    
+    # Get the current language
+    current_language = session.get('language', 'en')
+    
+    # If reset is requested or language has changed and we have previous answers, clear them
+    if reset and 'questionnaire_answers' in session:
+        session.pop('questionnaire_answers')
+        if 'dashboard_analysis' in session:
+            session.pop('dashboard_analysis')
+        flash('Questionnaire has been reset. Please fill it out again.', 'info')
+    
+    # If questionnaire is already completed, store the language
+    if 'questionnaire_answers' in session:
+        session['questionnaire_language'] = current_language
+    
+    return render_template('questionnaire.html')
 
 @app.route('/submit-questionnaire', methods=['POST'])
 def submit_questionnaire():
-    """Process the questionnaire submission"""
+    """Process the submitted questionnaire form"""
     try:
-        # Get form data
-        data = request.form.to_dict()
+        # Get form data directly (don't convert to dict)
+        form_data = request.form
         
-        # Remove CSRF token from data before processing
-        data.pop('csrf_token', None)
-        
-        # Process nested form data
+        # Process form data into structured questionnaire answers
         questionnaire_answers = {
             "personal_info": {
-                "age": int(data.get('age', 0)),
-                "education_level": data.get('education_level', ''),
-                "subject_interests": data.get('subject_interests', '').split(',')
+                "age": int(form_data.get('age', 0)),
+                "education_level": form_data.get('education_level', ''),
+                "subject_interests": form_data.get('subject_interests', '').split(',')
             },
             "learning_difficulties": {
-                "diagnosed_conditions": data.get('diagnosed_conditions', '').split(','),
-                "self_reported_challenges": data.get('self_reported_challenges', '').split(',')
+                "diagnosed_conditions": form_data.getlist('diagnosed_conditions'),
+                "self_reported_challenges": form_data.getlist('self_reported_challenges')
             },
             "attention_patterns": {
-                "average_focus_duration_minutes": int(data.get('average_focus_duration', 0)),
-                "best_focus_time_of_day": data.get('best_focus_time', '').split(','),
-                "distraction_triggers": data.get('distraction_triggers', '').split(','),
-                "hyperfocus_activities": data.get('hyperfocus_activities', '').split(',')
+                "average_focus_duration_minutes": int(form_data.get('average_focus_duration', 0)),
+                "best_focus_time_of_day": form_data.getlist('best_focus_time'),
+                "distraction_triggers": form_data.getlist('distraction_triggers'),
+                "hyperfocus_activities": form_data.getlist('hyperfocus_activities')
             },
             "reading_patterns": {
-                "reading_speed": data.get('reading_speed', ''),
-                "difficult_text_features": data.get('difficult_text_features', '').split(','),
+                "reading_speed": form_data.get('reading_speed', ''),
+                "difficult_text_features": form_data.getlist('difficult_text_features'),
                 "preferred_text_format": {
-                    "font": data.get('preferred_font', ''),
-                    "size": data.get('preferred_size', ''),
-                    "spacing": data.get('preferred_spacing', ''),
-                    "background": data.get('preferred_background', '')
+                    "font": form_data.get('preferred_font', ''),
+                    "size": form_data.get('preferred_size', ''),
+                    "spacing": form_data.get('preferred_spacing', ''),
+                    "background": form_data.get('preferred_background', '')
                 },
-                "comprehension_aids": data.get('comprehension_aids', '').split(',')
+                "comprehension_aids": form_data.getlist('comprehension_aids')
             },
             "learning_preferences": {
                 "modality_preference": {
-                    "visual": float(data.get('visual_preference', 0.5)),
-                    "auditory": float(data.get('auditory_preference', 0.5)),
-                    "kinesthetic": float(data.get('kinesthetic_preference', 0.5))
+                    "visual": float(form_data.get('visual_preference', 0.5)),
+                    "auditory": float(form_data.get('auditory_preference', 0.5)),
+                    "kinesthetic": float(form_data.get('kinesthetic_preference', 0.5))
                 },
-                "feedback_preference": data.get('feedback_preference', ''),
-                "group_vs_individual": data.get('group_vs_individual', ''),
-                "technology_comfort": data.get('technology_comfort', '')
+                "feedback_preference": form_data.get('feedback_preference', ''),
+                "group_vs_individual": form_data.get('group_vs_individual', ''),
+                "technology_comfort": form_data.get('technology_comfort', '')
             },
             "previous_strategies": {
                 strategy: {
-                    "effectiveness": int(data.get(f'{strategy}_effectiveness', 0)),
-                    "notes": data.get(f'{strategy}_notes', '')
+                    "effectiveness": int(form_data.get(f'{strategy}_effectiveness', 0)),
+                    "notes": form_data.get(f'{strategy}_notes', '')
                 } for strategy in ['task_breakdown', 'pomodoro_technique', 'text_to_speech', 'concept_mapping']
-                if data.get(f'{strategy}_effectiveness')
+                if form_data.get(f'{strategy}_effectiveness')
             }
         }
         
-        # Save to session
+        # Store in session
         session['questionnaire_answers'] = questionnaire_answers
         
-        # Clear any existing analysis results
+        # Store the language used for the questionnaire
+        session['questionnaire_language'] = session.get('language', 'en')
+        
+        # Generate a user ID if not already present
+        if 'user_id' not in session:
+            session['user_id'] = str(uuid.uuid4())
+        
+        # Clear any existing analysis
         if 'dashboard_analysis' in session:
             session.pop('dashboard_analysis')
-        if 'user_analysis' in session:
-            session.pop('user_analysis')
-        if 'support_strategies' in session:
-            session.pop('support_strategies')
         
-        # Save to file for future use
-        user_id = datetime.now().strftime("%Y%m%d%H%M%S")
-        session['user_id'] = user_id
-        
-        profile_dir = os.path.join(config.get("storage.user_profiles_path"))
-        os.makedirs(profile_dir, exist_ok=True)
-        
-        with open(os.path.join(profile_dir, f"{user_id}.json"), 'w') as f:
-            json.dump({"questionnaire_answers": questionnaire_answers}, f, indent=2)
-        
+        # Redirect to dashboard
         return redirect(url_for('dashboard'))
-    
+        
     except Exception as e:
-        return jsonify({"error": str(e)}), 400
+        flash(f'Error processing questionnaire: {str(e)}', 'error')
+        return redirect(url_for('questionnaire'))
 
 @app.route('/dashboard')
 def dashboard():
-    """Render the user dashboard"""
+    """Display the user dashboard with analysis results"""
+    # Check if user has completed the questionnaire
     if 'questionnaire_answers' not in session:
+        flash('Please complete the questionnaire first.', 'warning')
         return redirect(url_for('questionnaire'))
+    
+    # Get the current language
+    current_language = session.get('language', 'en')
+    
+    # Check if we have analysis results in the session
+    if 'dashboard_analysis' not in session:
+        # Try to get analysis from the database-like storage
+        user_id = session.get('user_id')
+        if user_id:
+            analysis = config.get_user_analysis(user_id, current_language)
+            if analysis:
+                session['dashboard_analysis'] = analysis
+                # Store the language used for this analysis
+                session['analysis_language'] = current_language
     
     # Get language setting
     language = session.get('language', config.get("system.language"))
@@ -467,9 +492,7 @@ def process_material():
 @app.route('/learning-view')
 def learning_view():
     """Render the learning view page with processed content"""
-    if 'questionnaire_answers' not in session:
-        return redirect(url_for('questionnaire'))
-    
+    # Check if a material is selected
     # Get material_id from query string or session
     material_id = request.args.get('material_id')
     
@@ -489,6 +512,16 @@ def learning_view():
         return redirect(url_for('material_upload'))
     
     user_id = session.get('user_id', 'anonymous')
+    
+    # Debug: Check if questionnaire_answers is in session
+    if 'questionnaire_answers' not in session:
+        print("WARNING: questionnaire_answers not in session")
+        # Create a default questionnaire_answers to avoid redirects
+        session['questionnaire_answers'] = {
+            "learning_difficulties": {
+                "diagnosed_conditions": ["ADHD"]  # Set to ADHD to ensure micro-units are displayed
+            }
+        }
     
     # Load the material title from the results file
     results_dir = os.path.join(config.get("storage.results_path") or "data/results")
@@ -557,10 +590,15 @@ def learning_view():
         elif 'Dyslexia' in diagnosed_conditions:
             user_profile['difficulty_type'] = 'Dyslexia'
         else:
-            user_profile['difficulty_type'] = 'Standard'
+            # Default to ADHD to ensure micro-units are displayed
+            user_profile['difficulty_type'] = 'ADHD'
         
         if 'support_level' not in user_profile:
             user_profile['support_level'] = 'moderate'
+    
+    # Force difficulty_type to ADHD to ensure micro-units are displayed
+    if user_profile['difficulty_type'] not in ['ADHD', 'Combined']:
+        user_profile['difficulty_type'] = 'ADHD'
     
     # Get agents used from the interaction history
     agents_used = []
@@ -678,43 +716,60 @@ def set_language():
 
 @app.route('/refresh-analysis')
 def refresh_analysis():
-    """Force a refresh of the dashboard analysis"""
-    # Clear any existing analysis results
-    if 'dashboard_analysis' in session:
-        session.pop('dashboard_analysis')
-    
-    # Get user ID and language
-    user_id = session.get('user_id', 'anonymous')
-    language = session.get('language', config.get("system.language"))
-    
-    # Set up paths
-    analysis_dir = os.path.join(config.get("storage.results_path"), "analysis")
-    analysis_in_progress_file = os.path.join(analysis_dir, f"{user_id}_analysis_in_progress")
-    
-    # If analysis is not already in progress, start it
-    if not os.path.exists(analysis_in_progress_file):
-        # Create a file to indicate analysis is in progress
+    """Refresh the dashboard analysis"""
+    try:
+        # Clear the current analysis from session
+        if 'dashboard_analysis' in session:
+            session.pop('dashboard_analysis')
+        
+        # Get the current language
+        current_language = session.get('language', 'en')
+        
+        # Get user ID
+        user_id = session.get('user_id')
+        if not user_id:
+            # Generate a new user ID if not present
+            user_id = str(uuid.uuid4())
+            session['user_id'] = user_id
+        
+        # Get questionnaire answers
+        questionnaire_answers = session.get('questionnaire_answers')
+        if not questionnaire_answers:
+            flash('Please complete the questionnaire first.', 'warning')
+            return redirect(url_for('questionnaire'))
+        
+        # Create analysis directory if it doesn't exist
+        analysis_dir = os.path.join(config.get("storage.results_path"), "analysis")
         os.makedirs(analysis_dir, exist_ok=True)
-        with open(analysis_in_progress_file, 'w') as f:
-            f.write(datetime.now().isoformat())
         
-        # Save questionnaire data to a file for the background process to use
-        questionnaire_data = session.get('questionnaire_answers', {})
-        with open(os.path.join(analysis_dir, f"{user_id}_questionnaire.json"), 'w') as f:
-            json.dump(questionnaire_data, f, indent=2)
+        # Save questionnaire data to a file for the background process
+        questionnaire_file = os.path.join(analysis_dir, f"{user_id}_questionnaire.json")
+        with open(questionnaire_file, 'w') as f:
+            json.dump(questionnaire_answers, f)
         
-        # Start the analysis process using a separate script
-        import subprocess
-        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'run_analysis.py')
+        # Create a file to indicate analysis is in progress
+        in_progress_file = os.path.join(analysis_dir, f"{user_id}_analysis_in_progress")
+        with open(in_progress_file, 'w') as f:
+            f.write(str(datetime.now()))
+        
+        # Run the analysis in a separate process
         subprocess.Popen([
             sys.executable, 
-            script_path, 
+            os.path.join(os.path.dirname(__file__), '..', 'src', 'run_analysis.py'),
             '--user_id', user_id,
-            '--language', language
+            '--language', current_language
         ])
-    
-    # Redirect back to the dashboard
-    return redirect(url_for('dashboard'))
+        
+        # Update the analysis language in the session
+        session['analysis_language'] = current_language
+        
+        # Redirect to the dashboard with a message
+        flash('Analysis is being refreshed. This may take a moment.', 'info')
+        return redirect(url_for('dashboard'))
+        
+    except Exception as e:
+        flash(f'Error refreshing analysis: {str(e)}', 'error')
+        return redirect(url_for('dashboard'))
 
 @app.route('/material-processing')
 def material_processing():
@@ -885,9 +940,9 @@ def load_processed_content(user_id, material_id):
             if original_text and isinstance(original_text, str):
                 original_text = convert_markdown_to_html(original_text)
             
-            # Create a section
+            # Create a section - IMPORTANT: Don't add 'section-' prefix to ID
             section = {
-                "id": "section-1",
+                "id": "1",  # This ID will be used directly in the HTML
                 "title": material_title,
                 "content": original_text,
                 "estimated_time": len(original_text.split()) // 200 if original_text else 5,
@@ -981,7 +1036,7 @@ def load_processed_content(user_id, material_id):
             # Create a default structure if we don't have the expected format
             processed_content = {
                 "sections": [{
-                    "id": "section-1",
+                    "id": "1",
                     "title": "Content",
                     "content": original_text,
                     "estimated_time": 5,

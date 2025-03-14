@@ -10,6 +10,11 @@
 <section class="page-header">
     <h1>{{ t('dashboard', 'title') }}</h1>
     <p class="subtitle">{{ t('dashboard', 'subtitle') }}</p>
+    {% if session.get('language') != session.get('analysis_language', session.get('language')) %}
+    <div class="language-notice">
+        <p>{{ t('dashboard', 'language_notice') }} <a href="{{ url_for('refresh_analysis') }}" class="btn btn-small">{{ t('dashboard', 'refresh_analysis') }}</a></p>
+    </div>
+    {% endif %}
 </section>
 
 <!-- Loading indicator -->
@@ -37,7 +42,7 @@
                     <h3>{{ t('dashboard', 'severity_level') }}</h3>
                     <div class="meter-container">
                         <div class="meter-bar">
-                            <div class="meter-fill" style="width: {{ (analysis.severity_level|default(0) / 5) * 100 }}%"></div>
+                            <div class="meter-fill" style="width: {% if analysis.severity_level is defined %}{{ (analysis.severity_level / 5) * 100 }}{% else %}0{% endif %}%"></div>
                         </div>
                         <div class="meter-labels">
                             <span>{{ t('dashboard', 'mild') }}</span>
@@ -54,12 +59,11 @@
                             {% if analysis.specific_features %}
                                 {% for category, features in analysis.specific_features.items() %}
                                     <li class="feature-category">
-                                        <span class="feature-name">{{ category|title }}</span>
+                                        <div class="category-divider"></div>
                                     </li>
                                     {% for feature, value in features.items() %}
                                         <li class="feature-item">
-                                            <span class="feature-name">- {{ feature|replace('_', ' ')|title }}</span>
-                                            <span class="feature-value">{{ value }}</span>
+                                            <div class="feature-value">{{ value }}</div>
                                         </li>
                                     {% endfor %}
                                 {% endfor %}
@@ -74,9 +78,8 @@
                         <ul class="strength-list">
                             {% if analysis.strengths %}
                                 {% for strength, value in analysis.strengths.items() %}
-                                    <li>
-                                        <span class="strength-name">{{ strength|replace('_', ' ')|title }}</span>
-                                        <span class="strength-value">{{ value }}</span>
+                                    <li class="strength-item">
+                                        <div class="strength-value">{{ value }}</div>
                                     </li>
                                 {% endfor %}
                             {% else %}

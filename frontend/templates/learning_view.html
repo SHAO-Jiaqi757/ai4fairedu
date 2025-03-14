@@ -19,8 +19,13 @@
     <div class="content-container">
         <!-- Content Views -->
         <section class="page-header">
-            <h1>{{ material_title }}</h1>
-            <p class="subtitle">Personalized Learning Experience</p>
+            <h1>{{ t('learning_view', 'title') }}</h1>
+            <p class="subtitle">{{ t('learning_view', 'subtitle') }}</p>
+            {% if session.get('language') != session.get('material_language', session.get('language')) %}
+            <div class="language-notice">
+                <p>{{ t('learning_view', 'language_notice') }} <a href="{{ url_for('learning_view') }}?refresh=true" class="btn btn-small">{{ t('learning_view', 'refresh_material') }}</a></p>
+            </div>
+            {% endif %}
         </section>
 
         <div class="learning-container">
@@ -90,7 +95,7 @@
                     <div class="content-view adapted-view active">
                         {% if processed_content.sections %}
                             {% for section in processed_content.sections %}
-                            <div class="content-section {% if loop.first %}active{% endif %}" id="section-{{ section.id }}">
+                            <div class="content-section {% if loop.first %}active{% endif %}" id="{{ section.id }}">
                                 <div class="section-header">
                                     <h2>{{ section.title }}</h2>
                                     <div class="section-meta">
@@ -319,6 +324,7 @@
 </div>
 {% endif %}
 
+
 <!-- Replace with a modal for original content -->
 <div id="original-content-modal" class="modal">
     <div class="modal-content">
@@ -335,40 +341,16 @@
 
 {% block extra_scripts %}
 <script>
-    // Make processed content available to JavaScript
-    try {
-        window.processedContent = JSON.parse('{{ processed_content|tojson|safe }}');
-        
-        // If detailed_units aren't available in the JSON, create them from the DOM
-        if (!window.processedContent.detailed_units) {
-            window.processedContent.detailed_units = [];
-            
-            // Find all micro-units
-            const microUnits = document.querySelectorAll('.micro-unit');
-            
-            // For each micro-unit, extract the detailed content and create a detailed unit object
-            microUnits.forEach(unit => {
-                const unitNumber = parseInt(unit.getAttribute('data-unit-number'), 10);
-                const detailedContentEl = unit.querySelector('.detailed-content');
-                
-                if (detailedContentEl && detailedContentEl.innerHTML.length > 100) {
-                    // Extract the content after the "Detailed Content" heading
-                    const contentWithoutHeading = detailedContentEl.innerHTML.replace(/<h3>Detailed Content<\/h3>/, '');
-                    
-                    // Create a detailed unit object
-                    const detailedUnit = {
-                        unit_number: unitNumber,
-                        estimated_time_minutes: 5, // Default value
-                        detailed_content: contentWithoutHeading
-                    };
-                    
-                    // Add to the detailed_units array
-                    window.processedContent.detailed_units.push(detailedUnit);
-                }
-            });
-        }
-    } catch (error) {
-        console.error("Error parsing processed content:", error);
+    // Pass processed content to JavaScript
+    window.processedContent = JSON.parse('{{ processed_content|tojson|safe }}');
+    
+    // Debug information
+    console.log("Content loaded from template");
+    if (window.processedContent && window.processedContent.sections) {
+        console.log("Found " + window.processedContent.sections.length + " sections");
+    }
+    if (window.processedContent && window.processedContent.detailed_units) {
+        console.log("Found " + window.processedContent.detailed_units.length + " detailed units");
     }
 </script>
 <script src="{{ url_for('static', filename='js/learning_view.js') }}"></script>

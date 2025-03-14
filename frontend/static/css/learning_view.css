@@ -1567,4 +1567,36 @@
 @keyframes slideIn {
     from {transform: translateY(-50px); opacity: 0;}
     to {transform: translateY(0); opacity: 1;}
+}
+
+.language-notice {
+    background-color: var(--color-info-light);
+    border-left: 4px solid var(--color-info);
+    padding: var(--spacing-md);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.language-notice p {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.language-notice .btn-small {
+    margin-left: var(--spacing-md);
+    white-space: nowrap;
+}
+
+/* Content Section Styles */
+.content-section {
+    display: none;
+    padding: 20px 0;
+}
+
+.content-section.active {
+    display: block;
 } 

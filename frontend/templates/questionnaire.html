@@ -10,6 +10,11 @@
 <section class="page-header">
     <h1>{{ t('questionnaire', 'title') }}</h1>
     <p class="subtitle">{{ t('questionnaire', 'subtitle') }}</p>
+    {% if session.get('language') != session.get('questionnaire_language', session.get('language')) and session.get('questionnaire_answers') %}
+    <div class="language-notice">
+        <p>{{ t('questionnaire', 'language_notice') }} <a href="{{ url_for('questionnaire') }}?reset=true" class="btn btn-small">{{ t('questionnaire', 'reset_questionnaire') }}</a></p>
+    </div>
+    {% endif %}
 </section>
 
 <section class="questionnaire-section">
@@ -38,321 +43,354 @@
             <div class="form-group">
                 <label for="education_level">{{ t('questionnaire', 'education_level') }}</label>
                 <select id="education_level" name="education_level" required>
-                    <option value="">Select your education level</option>
-                    <option value="elementary">Elementary School</option>
-                    <option value="middle">Middle School</option>
-                    <option value="high">High School</option>
-                    <option value="undergraduate">Undergraduate</option>
-                    <option value="graduate">Graduate School</option>
-                    <option value="professional">Professional</option>
+                    <option value="">{{ t('questionnaire', 'select_education') }}</option>
+                    <option value="elementary">{{ t('questionnaire', 'elementary') }}</option>
+                    <option value="middle">{{ t('questionnaire', 'middle') }}</option>
+                    <option value="high">{{ t('questionnaire', 'high') }}</option>
+                    <option value="undergraduate">{{ t('questionnaire', 'undergraduate') }}</option>
+                    <option value="graduate">{{ t('questionnaire', 'graduate') }}</option>
+                    <option value="professional">{{ t('questionnaire', 'professional') }}</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label for="subject_interests">Subject Interests (comma-separated)</label>
-                <input type="text" id="subject_interests" name="subject_interests" placeholder="e.g., Mathematics, Science, History" required>
-                <small>Enter subjects you're interested in, separated by commas</small>
+                <label for="subject_interests">{{ t('questionnaire', 'subject_interests') }}</label>
+                <input type="text" id="subject_interests" name="subject_interests" placeholder="{{ t('questionnaire', 'subject_interests_placeholder') }}" required>
+                <small>{{ t('questionnaire', 'subject_interests_help') }}</small>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary next-btn">Next</button>
+                <button type="button" class="btn btn-secondary next-btn">{{ t('questionnaire', 'next') }}</button>
             </div>
         </div>
         
         <!-- Section 2: Learning Difficulties -->
         <div class="form-section" id="section-2">
-            <h2>Learning Difficulties</h2>
+            <h2>{{ t('questionnaire', 'learning_difficulties') }}</h2>
             
             <div class="form-group">
-                <label for="diagnosed_conditions">Have you been diagnosed with any learning conditions? (comma-separated)</label>
-                <input type="text" id="diagnosed_conditions" name="diagnosed_conditions" placeholder="e.g., ADHD, Dyslexia, None">
-                <small>If none, enter "None"</small>
+                <label for="diagnosed_conditions">{{ t('questionnaire', 'diagnosed_conditions') }}</label>
+                <select id="diagnosed_conditions" name="diagnosed_conditions" multiple>
+                    <option value="ADHD">{{ t('questionnaire', 'adhd') }}</option>
+                    <option value="Dyslexia">{{ t('questionnaire', 'dyslexia') }}</option>
+                    <option value="None">{{ t('questionnaire', 'none') }}</option>
+                </select>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-group">
-                <label for="self_reported_challenges">What learning challenges do you experience? (comma-separated)</label>
-                <input type="text" id="self_reported_challenges" name="self_reported_challenges" placeholder="e.g., Difficulty focusing, Reading slowly, Organizing thoughts" required>
-                <small>Enter challenges you face when learning, separated by commas</small>
+                <label for="self_reported_challenges">{{ t('questionnaire', 'self_reported') }}</label>
+                <select id="self_reported_challenges" name="self_reported_challenges" multiple required>
+                    <option value="Difficulty focusing">{{ t('questionnaire', 'difficulty_focusing') }}</option>
+                    <option value="Reading slowly">{{ t('questionnaire', 'reading_slowly') }}</option>
+                    <option value="Organizing thoughts">{{ t('questionnaire', 'organizing_thoughts') }}</option>
+                    <option value="Easily distracted">{{ t('questionnaire', 'easily_distracted') }}</option>
+                    <option value="Difficulty with instructions">{{ t('questionnaire', 'difficulty_instructions') }}</option>
+                </select>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary prev-btn">Previous</button>
-                <button type="button" class="btn btn-secondary next-btn">Next</button>
+                <button type="button" class="btn btn-secondary prev-btn">{{ t('questionnaire', 'previous') }}</button>
+                <button type="button" class="btn btn-secondary next-btn">{{ t('questionnaire', 'next') }}</button>
             </div>
         </div>
         
         <!-- Section 3: Attention Patterns -->
         <div class="form-section" id="section-3">
-            <h2>Attention Patterns</h2>
+            <h2>{{ t('questionnaire', 'attention_patterns') }}</h2>
             
             <div class="form-group">
-                <label for="average_focus_duration">How long can you typically focus on a task without a break? (minutes)</label>
+                <label for="average_focus_duration">{{ t('questionnaire', 'focus_duration') }}</label>
                 <input type="number" id="average_focus_duration" name="average_focus_duration" min="1" max="180" required>
             </div>
             
             <div class="form-group">
-                <label for="best_focus_time">When are you most focused? (comma-separated)</label>
-                <input type="text" id="best_focus_time" name="best_focus_time" placeholder="e.g., Morning, After exercise, In quiet environments" required>
+                <label for="best_focus_time">{{ t('questionnaire', 'best_focus_time') }}</label>
+                <select id="best_focus_time" name="best_focus_time" multiple required>
+                    <option value="Morning">{{ t('questionnaire', 'morning') }}</option>
+                    <option value="Afternoon">{{ t('questionnaire', 'afternoon') }}</option>
+                    <option value="Evening">{{ t('questionnaire', 'evening') }}</option>
+                </select>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-group">
-                <label for="distraction_triggers">What typically distracts you? (comma-separated)</label>
-                <input type="text" id="distraction_triggers" name="distraction_triggers" placeholder="e.g., Noise, Notifications, Visual clutter" required>
+                <label for="distraction_triggers">{{ t('questionnaire', 'distraction_triggers') }}</label>
+                <select id="distraction_triggers" name="distraction_triggers" multiple required>
+                    <option value="Noise">{{ t('questionnaire', 'noise') }}</option>
+                    <option value="Visual stimuli">{{ t('questionnaire', 'visual_stimuli') }}</option>
+                    <option value="Internal thoughts">{{ t('questionnaire', 'internal_thoughts') }}</option>
+                    <option value="Notifications">{{ t('questionnaire', 'notifications') }}</option>
+                    <option value="Other people">{{ t('questionnaire', 'other_people') }}</option>
+                </select>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-group">
-                <label for="hyperfocus_activities">What activities can you focus on for extended periods? (comma-separated)</label>
-                <input type="text" id="hyperfocus_activities" name="hyperfocus_activities" placeholder="e.g., Video games, Reading fiction, Art" required>
+                <label for="hyperfocus_activities">{{ t('questionnaire', 'hyperfocus_activities') }}</label>
+                <input type="text" id="hyperfocus_activities" name="hyperfocus_activities" placeholder="{{ t('questionnaire', 'hyperfocus_placeholder') }}" required>
+                <small>{{ t('questionnaire', 'comma_separated_help') }}</small>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary prev-btn">Previous</button>
-                <button type="button" class="btn btn-secondary next-btn">Next</button>
+                <button type="button" class="btn btn-secondary prev-btn">{{ t('questionnaire', 'previous') }}</button>
+                <button type="button" class="btn btn-secondary next-btn">{{ t('questionnaire', 'next') }}</button>
             </div>
         </div>
         
         <!-- Section 4: Reading Patterns -->
         <div class="form-section" id="section-4">
-            <h2>Reading Patterns</h2>
+            <h2>{{ t('questionnaire', 'reading_patterns') }}</h2>
             
             <div class="form-group">
-                <label for="reading_speed">How would you describe your reading speed?</label>
+                <label for="reading_speed">{{ t('questionnaire', 'reading_speed') }}</label>
                 <select id="reading_speed" name="reading_speed" required>
-                    <option value="">Select an option</option>
-                    <option value="very_slow">Very slow - I need to read text multiple times</option>
-                    <option value="slow">Slow - Below average speed</option>
-                    <option value="average">Average - Similar to peers</option>
-                    <option value="fast">Fast - Above average speed</option>
-                    <option value="very_fast">Very fast - I can skim and comprehend quickly</option>
+                    <option value="">{{ t('questionnaire', 'select_option') }}</option>
+                    <option value="very_slow">{{ t('questionnaire', 'very_slow') }}</option>
+                    <option value="slow">{{ t('questionnaire', 'slow') }}</option>
+                    <option value="average">{{ t('questionnaire', 'average') }}</option>
+                    <option value="fast">{{ t('questionnaire', 'fast') }}</option>
+                    <option value="very_fast">{{ t('questionnaire', 'very_fast') }}</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label for="difficult_text_features">What text features do you find difficult? (comma-separated)</label>
-                <input type="text" id="difficult_text_features" name="difficult_text_features" placeholder="e.g., Long paragraphs, Complex vocabulary, Small font" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="preferred_font">Preferred font for reading</label>
-                <select id="preferred_font" name="preferred_font">
-                    <option value="">Select a font</option>
-                    <option value="Arial">Arial</option>
-                    <option value="Verdana">Verdana</option>
-                    <option value="OpenDyslexic">OpenDyslexic</option>
-                    <option value="Comic Sans MS">Comic Sans MS</option>
-                    <option value="Times New Roman">Times New Roman</option>
+                <label for="difficult_text_features">{{ t('questionnaire', 'difficult_text_features') }}</label>
+                <select id="difficult_text_features" name="difficult_text_features" multiple required>
+                    <option value="Small font">{{ t('questionnaire', 'small_font') }}</option>
+                    <option value="Dense text">{{ t('questionnaire', 'dense_text') }}</option>
+                    <option value="Certain fonts">{{ t('questionnaire', 'certain_fonts') }}</option>
+                    <option value="Long sentences">{{ t('questionnaire', 'long_sentences') }}</option>
+                    <option value="Complex vocabulary">{{ t('questionnaire', 'complex_vocabulary') }}</option>
                 </select>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-group">
-                <label for="preferred_size">Preferred font size</label>
-                <select id="preferred_size" name="preferred_size">
-                    <option value="">Select a size</option>
-                    <option value="small">Small</option>
-                    <option value="medium">Medium</option>
-                    <option value="large">Large</option>
-                    <option value="very_large">Very Large</option>
+                <label>{{ t('questionnaire', 'preferred_text_format') }}</label>
+                
+                <div class="form-group">
+                    <label for="preferred_font">{{ t('questionnaire', 'font') }}</label>
+                    <select id="preferred_font" name="preferred_font">
+                        <option value="sans-serif">{{ t('questionnaire', 'sans_serif') }}</option>
+                        <option value="serif">{{ t('questionnaire', 'serif') }}</option>
+                        <option value="dyslexic">{{ t('questionnaire', 'dyslexic_font') }}</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preferred_size">{{ t('questionnaire', 'size') }}</label>
+                    <select id="preferred_size" name="preferred_size">
+                        <option value="normal">{{ t('questionnaire', 'normal') }}</option>
+                        <option value="large">{{ t('questionnaire', 'large') }}</option>
+                        <option value="very_large">{{ t('questionnaire', 'very_large') }}</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preferred_spacing">{{ t('questionnaire', 'spacing') }}</label>
+                    <select id="preferred_spacing" name="preferred_spacing">
+                        <option value="normal">{{ t('questionnaire', 'normal') }}</option>
+                        <option value="wide">{{ t('questionnaire', 'wide') }}</option>
+                        <option value="very_wide">{{ t('questionnaire', 'very_wide') }}</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="preferred_background">{{ t('questionnaire', 'background') }}</label>
+                    <select id="preferred_background" name="preferred_background">
+                        <option value="white">{{ t('questionnaire', 'white') }}</option>
+                        <option value="cream">{{ t('questionnaire', 'cream') }}</option>
+                        <option value="light_gray">{{ t('questionnaire', 'light_gray') }}</option>
+                        <option value="pastel">{{ t('questionnaire', 'pastel') }}</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="comprehension_aids">{{ t('questionnaire', 'comprehension_aids') }}</label>
+                <select id="comprehension_aids" name="comprehension_aids" multiple>
+                    <option value="Highlighting">{{ t('questionnaire', 'highlighting') }}</option>
+                    <option value="Summaries">{{ t('questionnaire', 'summaries') }}</option>
+                    <option value="Visual aids">{{ t('questionnaire', 'visual_aids') }}</option>
+                    <option value="Audio support">{{ t('questionnaire', 'audio_support') }}</option>
+                    <option value="Interactive elements">{{ t('questionnaire', 'interactive_elements') }}</option>
                 </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="preferred_spacing">Preferred line spacing</label>
-                <select id="preferred_spacing" name="preferred_spacing">
-                    <option value="">Select spacing</option>
-                    <option value="normal">Normal</option>
-                    <option value="wide">Wide</option>
-                    <option value="very_wide">Very Wide</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="preferred_background">Preferred background color</label>
-                <select id="preferred_background" name="preferred_background">
-                    <option value="">Select a background</option>
-                    <option value="white">White</option>
-                    <option value="cream">Cream</option>
-                    <option value="light_yellow">Light Yellow</option>
-                    <option value="light_blue">Light Blue</option>
-                    <option value="light_gray">Light Gray</option>
-                </select>
-            </div>
-            
-            <div class="form-group">
-                <label for="comprehension_aids">What helps you comprehend text better? (comma-separated)</label>
-                <input type="text" id="comprehension_aids" name="comprehension_aids" placeholder="e.g., Highlighting, Summaries, Visual aids" required>
+                <small>{{ t('questionnaire', 'select_multiple_help') }}</small>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary prev-btn">Previous</button>
-                <button type="button" class="btn btn-secondary next-btn">Next</button>
+                <button type="button" class="btn btn-secondary prev-btn">{{ t('questionnaire', 'previous') }}</button>
+                <button type="button" class="btn btn-secondary next-btn">{{ t('questionnaire', 'next') }}</button>
             </div>
         </div>
         
         <!-- Section 5: Learning Preferences -->
         <div class="form-section" id="section-5">
-            <h2>Learning Preferences</h2>
+            <h2>{{ t('questionnaire', 'learning_preferences') }}</h2>
             
             <div class="form-group">
-                <label>Modality Preference (Rate each from 0 to 1, where 1 is strongest preference)</label>
+                <label>{{ t('questionnaire', 'modality_preference') }}</label>
                 
                 <div class="slider-group">
-                    <label for="visual_preference">Visual (images, diagrams, videos): <span id="visual_value">0.5</span></label>
-                    <input type="range" id="visual_preference" name="visual_preference" min="0" max="1" step="0.1" value="0.5">
+                    <label for="visual_preference">{{ t('questionnaire', 'visual') }} <span id="visual_value">0.5</span></label>
+                    <input type="range" id="visual_preference" name="visual_preference" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('visual_value').textContent = this.value">
                 </div>
                 
                 <div class="slider-group">
-                    <label for="auditory_preference">Auditory (listening, discussion): <span id="auditory_value">0.5</span></label>
-                    <input type="range" id="auditory_preference" name="auditory_preference" min="0" max="1" step="0.1" value="0.5">
+                    <label for="auditory_preference">{{ t('questionnaire', 'auditory') }} <span id="auditory_value">0.5</span></label>
+                    <input type="range" id="auditory_preference" name="auditory_preference" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('auditory_value').textContent = this.value">
                 </div>
                 
                 <div class="slider-group">
-                    <label for="kinesthetic_preference">Kinesthetic (hands-on, interactive): <span id="kinesthetic_value">0.5</span></label>
-                    <input type="range" id="kinesthetic_preference" name="kinesthetic_preference" min="0" max="1" step="0.1" value="0.5">
+                    <label for="kinesthetic_preference">{{ t('questionnaire', 'kinesthetic') }} <span id="kinesthetic_value">0.5</span></label>
+                    <input type="range" id="kinesthetic_preference" name="kinesthetic_preference" min="0" max="1" step="0.1" value="0.5" oninput="document.getElementById('kinesthetic_value').textContent = this.value">
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="feedback_preference">How do you prefer to receive feedback?</label>
+                <label for="feedback_preference">{{ t('questionnaire', 'feedback_preference') }}</label>
                 <select id="feedback_preference" name="feedback_preference" required>
-                    <option value="">Select an option</option>
-                    <option value="immediate">Immediate feedback after each task</option>
-                    <option value="periodic">Periodic check-ins</option>
-                    <option value="end_only">Only at the end of a learning session</option>
-                    <option value="detailed">Detailed and specific feedback</option>
-                    <option value="general">General and encouraging feedback</option>
+                    <option value="">{{ t('questionnaire', 'select_option') }}</option>
+                    <option value="immediate">{{ t('questionnaire', 'immediate') }}</option>
+                    <option value="periodic">{{ t('questionnaire', 'periodic') }}</option>
+                    <option value="end_only">{{ t('questionnaire', 'end_only') }}</option>
+                    <option value="detailed">{{ t('questionnaire', 'detailed') }}</option>
+                    <option value="general">{{ t('questionnaire', 'general') }}</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label for="group_vs_individual">Do you prefer group or individual learning?</label>
+                <label for="group_vs_individual">{{ t('questionnaire', 'group_vs_individual') }}</label>
                 <select id="group_vs_individual" name="group_vs_individual" required>
-                    <option value="">Select an option</option>
-                    <option value="strongly_individual">Strongly prefer individual learning</option>
-                    <option value="somewhat_individual">Somewhat prefer individual learning</option>
-                    <option value="neutral">No strong preference</option>
-                    <option value="somewhat_group">Somewhat prefer group learning</option>
-                    <option value="strongly_group">Strongly prefer group learning</option>
+                    <option value="">{{ t('questionnaire', 'select_option') }}</option>
+                    <option value="strongly_individual">{{ t('questionnaire', 'strongly_individual') }}</option>
+                    <option value="somewhat_individual">{{ t('questionnaire', 'somewhat_individual') }}</option>
+                    <option value="neutral">{{ t('questionnaire', 'neutral') }}</option>
+                    <option value="somewhat_group">{{ t('questionnaire', 'somewhat_group') }}</option>
+                    <option value="strongly_group">{{ t('questionnaire', 'strongly_group') }}</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label for="technology_comfort">How comfortable are you with using technology for learning?</label>
+                <label for="technology_comfort">{{ t('questionnaire', 'technology_comfort') }}</label>
                 <select id="technology_comfort" name="technology_comfort" required>
-                    <option value="">Select an option</option>
-                    <option value="very_uncomfortable">Very uncomfortable</option>
-                    <option value="somewhat_uncomfortable">Somewhat uncomfortable</option>
-                    <option value="neutral">Neutral</option>
-                    <option value="somewhat_comfortable">Somewhat comfortable</option>
-                    <option value="very_comfortable">Very comfortable</option>
+                    <option value="">{{ t('questionnaire', 'select_option') }}</option>
+                    <option value="very_uncomfortable">{{ t('questionnaire', 'very_uncomfortable') }}</option>
+                    <option value="uncomfortable">{{ t('questionnaire', 'uncomfortable') }}</option>
+                    <option value="neutral">{{ t('questionnaire', 'neutral') }}</option>
+                    <option value="comfortable">{{ t('questionnaire', 'comfortable') }}</option>
+                    <option value="very_comfortable">{{ t('questionnaire', 'very_comfortable') }}</option>
                 </select>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary prev-btn">Previous</button>
-                <button type="button" class="btn btn-secondary next-btn">Next</button>
+                <button type="button" class="btn btn-secondary prev-btn">{{ t('questionnaire', 'previous') }}</button>
+                <button type="button" class="btn btn-secondary next-btn">{{ t('questionnaire', 'next') }}</button>
             </div>
         </div>
         
         <!-- Section 6: Previous Strategies -->
         <div class="form-section" id="section-6">
-            <h2>Previous Learning Strategies</h2>
-            <p>Rate the effectiveness of strategies you've tried before (1-5, where 5 is most effective)</p>
+            <h2>{{ t('questionnaire', 'previous_strategies') }}</h2>
+            <p>{{ t('questionnaire', 'strategy_effectiveness') }}</p>
             
             <div class="strategy-group">
-                <h3>Task Breakdown</h3>
-                <p>Breaking complex tasks into smaller, manageable steps</p>
+                <h3>{{ t('questionnaire', 'task_breakdown') }}</h3>
+                <p>{{ t('questionnaire', 'task_breakdown_desc') }}</p>
                 
                 <div class="form-group">
-                    <label for="task_breakdown_effectiveness">Effectiveness:</label>
+                    <label for="task_breakdown_effectiveness">{{ t('questionnaire', 'effectiveness') }}:</label>
                     <select id="task_breakdown_effectiveness" name="task_breakdown_effectiveness">
-                        <option value="">Select effectiveness</option>
-                        <option value="1">1 - Not effective</option>
-                        <option value="2">2 - Slightly effective</option>
-                        <option value="3">3 - Moderately effective</option>
-                        <option value="4">4 - Very effective</option>
-                        <option value="5">5 - Extremely effective</option>
-                        <option value="0">Haven't tried</option>
+                        <option value="">{{ t('questionnaire', 'select_effectiveness') }}</option>
+                        <option value="1">1 - {{ t('questionnaire', 'not_effective') }}</option>
+                        <option value="2">2 - {{ t('questionnaire', 'slightly_effective') }}</option>
+                        <option value="3">3 - {{ t('questionnaire', 'moderately_effective') }}</option>
+                        <option value="4">4 - {{ t('questionnaire', 'very_effective') }}</option>
+                        <option value="5">5 - {{ t('questionnaire', 'extremely_effective') }}</option>
+                        <option value="0">{{ t('questionnaire', 'havent_tried') }}</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="task_breakdown_notes">Notes (optional):</label>
+                    <label for="task_breakdown_notes">{{ t('questionnaire', 'notes') }}:</label>
                     <textarea id="task_breakdown_notes" name="task_breakdown_notes" rows="2"></textarea>
                 </div>
             </div>
             
             <div class="strategy-group">
-                <h3>Pomodoro Technique</h3>
-                <p>Working in focused intervals (e.g., 25 minutes) with short breaks</p>
+                <h3>{{ t('questionnaire', 'pomodoro') }}</h3>
+                <p>{{ t('questionnaire', 'pomodoro_desc') }}</p>
                 
                 <div class="form-group">
-                    <label for="pomodoro_technique_effectiveness">Effectiveness:</label>
+                    <label for="pomodoro_technique_effectiveness">{{ t('questionnaire', 'effectiveness') }}:</label>
                     <select id="pomodoro_technique_effectiveness" name="pomodoro_technique_effectiveness">
-                        <option value="">Select effectiveness</option>
-                        <option value="1">1 - Not effective</option>
-                        <option value="2">2 - Slightly effective</option>
-                        <option value="3">3 - Moderately effective</option>
-                        <option value="4">4 - Very effective</option>
-                        <option value="5">5 - Extremely effective</option>
-                        <option value="0">Haven't tried</option>
+                        <option value="">{{ t('questionnaire', 'select_effectiveness') }}</option>
+                        <option value="1">1 - {{ t('questionnaire', 'not_effective') }}</option>
+                        <option value="2">2 - {{ t('questionnaire', 'slightly_effective') }}</option>
+                        <option value="3">3 - {{ t('questionnaire', 'moderately_effective') }}</option>
+                        <option value="4">4 - {{ t('questionnaire', 'very_effective') }}</option>
+                        <option value="5">5 - {{ t('questionnaire', 'extremely_effective') }}</option>
+                        <option value="0">{{ t('questionnaire', 'havent_tried') }}</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="pomodoro_technique_notes">Notes (optional):</label>
+                    <label for="pomodoro_technique_notes">{{ t('questionnaire', 'notes') }}:</label>
                     <textarea id="pomodoro_technique_notes" name="pomodoro_technique_notes" rows="2"></textarea>
                 </div>
             </div>
             
             <div class="strategy-group">
-                <h3>Text-to-Speech</h3>
-                <p>Using technology to read text aloud</p>
+                <h3>{{ t('questionnaire', 'text_to_speech') }}</h3>
+                <p>{{ t('questionnaire', 'text_to_speech_desc') }}</p>
                 
                 <div class="form-group">
-                    <label for="text_to_speech_effectiveness">Effectiveness:</label>
+                    <label for="text_to_speech_effectiveness">{{ t('questionnaire', 'effectiveness') }}:</label>
                     <select id="text_to_speech_effectiveness" name="text_to_speech_effectiveness">
-                        <option value="">Select effectiveness</option>
-                        <option value="1">1 - Not effective</option>
-                        <option value="2">2 - Slightly effective</option>
-                        <option value="3">3 - Moderately effective</option>
-                        <option value="4">4 - Very effective</option>
-                        <option value="5">5 - Extremely effective</option>
-                        <option value="0">Haven't tried</option>
+                        <option value="">{{ t('questionnaire', 'select_effectiveness') }}</option>
+                        <option value="1">1 - {{ t('questionnaire', 'not_effective') }}</option>
+                        <option value="2">2 - {{ t('questionnaire', 'slightly_effective') }}</option>
+                        <option value="3">3 - {{ t('questionnaire', 'moderately_effective') }}</option>
+                        <option value="4">4 - {{ t('questionnaire', 'very_effective') }}</option>
+                        <option value="5">5 - {{ t('questionnaire', 'extremely_effective') }}</option>
+                        <option value="0">{{ t('questionnaire', 'havent_tried') }}</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="text_to_speech_notes">Notes (optional):</label>
+                    <label for="text_to_speech_notes">{{ t('questionnaire', 'notes') }}:</label>
                     <textarea id="text_to_speech_notes" name="text_to_speech_notes" rows="2"></textarea>
                 </div>
             </div>
             
             <div class="strategy-group">
-                <h3>Concept Mapping</h3>
-                <p>Creating visual diagrams to connect ideas and concepts</p>
+                <h3>{{ t('questionnaire', 'concept_mapping') }}</h3>
+                <p>{{ t('questionnaire', 'concept_mapping_desc') }}</p>
                 
                 <div class="form-group">
-                    <label for="concept_mapping_effectiveness">Effectiveness:</label>
+                    <label for="concept_mapping_effectiveness">{{ t('questionnaire', 'effectiveness') }}:</label>
                     <select id="concept_mapping_effectiveness" name="concept_mapping_effectiveness">
-                        <option value="">Select effectiveness</option>
-                        <option value="1">1 - Not effective</option>
-                        <option value="2">2 - Slightly effective</option>
-                        <option value="3">3 - Moderately effective</option>
-                        <option value="4">4 - Very effective</option>
-                        <option value="5">5 - Extremely effective</option>
-                        <option value="0">Haven't tried</option>
+                        <option value="">{{ t('questionnaire', 'select_effectiveness') }}</option>
+                        <option value="1">1 - {{ t('questionnaire', 'not_effective') }}</option>
+                        <option value="2">2 - {{ t('questionnaire', 'slightly_effective') }}</option>
+                        <option value="3">3 - {{ t('questionnaire', 'moderately_effective') }}</option>
+                        <option value="4">4 - {{ t('questionnaire', 'very_effective') }}</option>
+                        <option value="5">5 - {{ t('questionnaire', 'extremely_effective') }}</option>
+                        <option value="0">{{ t('questionnaire', 'havent_tried') }}</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="concept_mapping_notes">Notes (optional):</label>
+                    <label for="concept_mapping_notes">{{ t('questionnaire', 'notes') }}:</label>
                     <textarea id="concept_mapping_notes" name="concept_mapping_notes" rows="2"></textarea>
                 </div>
             </div>
             
             <div class="form-navigation">
-                <button type="button" class="btn btn-secondary prev-btn">Previous</button>
-                <button type="submit" class="btn btn-primary">Submit Questionnaire</button>
+                <button type="button" class="btn btn-secondary prev-btn">{{ t('questionnaire', 'previous') }}</button>
+                <button type="submit" class="btn btn-primary">{{ t('questionnaire', 'submit') }}</button>
             </div>
         </div>
     </form>
