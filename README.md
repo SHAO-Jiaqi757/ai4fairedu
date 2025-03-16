@@ -1,98 +1,199 @@
-# AI4FairEdu
+# 利用LLM实现多种学习障碍支持系统
 
-A learning support system for students with ADHD and dyslexia.
+## 项目概述
 
-## Features
+针对注意力障碍(ADHD)、阅读障碍(Dyslexia)等学习困难，本项目提出基于纯文本大语言模型的可实现解决方案，确保技术可行性和实用性。系统通过分析用户特征，为不同类型的学习障碍提供个性化支持策略，帮助学习者克服学习困难，发挥自身潜力。
 
-- **User Profile Analysis**: Analyzes user questionnaire responses to identify learning difficulties and recommend support strategies.
-- **Learning Material Adaptation**: Adapts learning materials based on the user's profile to make them more accessible.
-- **Multilingual Support**: Supports English and Chinese languages throughout the application.
-- **Accessibility Features**: Includes font size adjustment, dyslexic-friendly font, and high contrast mode.
+### 项目背景
 
-## Language Support
+学习障碍影响着全球约15-20%的学生，传统的支持方法往往需要专业人员一对一干预，成本高且可及性低。随着大语言模型技术的发展，我们有机会创建智能化、个性化且可扩展的学习支持系统，使每个学习者都能获得适合自己需求的学习辅助。
 
-The application supports the following languages:
+### 核心价值
 
-- English (en)
-- Chinese (zh)
+- **个性化支持**：根据用户具体学习障碍特征提供定制化支持
+- **认知科学基础**：基于ADHD和阅读障碍的认知科学研究设计支持策略
+- **可及性**：降低获取专业支持的门槛，使更多学习者受益
+- **适应性学习**：系统随用户进步不断调整支持策略
 
-Users can switch between languages using the language selector in the top-right corner of the application. The language preference is stored in the user's session and applied to all pages.
+## 系统架构
 
-### Translation System
-
-The application uses a translation system based on a dictionary of translations stored in `frontend/translations.py`. This file contains translations for all text displayed in the application, organized by section and language.
-
-To add a new language, you need to:
-
-1. Add the language code to the language selector in `frontend/templates/base.html`
-2. Add translations for the language in `frontend/translations.py`
-3. Update the language validation in `frontend/app.py` to include the new language code
-
-### Dashboard Analysis
-
-When a user changes the language, the dashboard analysis is not regenerated. Instead, the application uses the existing analysis results stored in the database-like structure. This improves performance and provides a better user experience.
-
-## Database-like Storage
-
-The application uses a file-based database-like storage system to store user analysis results. This allows the application to:
-
-1. Store analysis results for multiple languages
-2. Avoid regenerating analysis when the user changes language
-3. Persist analysis results across sessions
-
-The storage system is implemented in the `SystemConfig` class in `src/config.py`. It provides methods to save and retrieve user analysis results:
-
-- `save_user_analysis(user_id, analysis_data, language)`: Saves analysis results for a user in a specific language
-- `get_user_analysis(user_id, language)`: Retrieves analysis results for a user in a specific language
-
-Analysis results are stored in JSON files in the `data/results/user_analysis` directory, with one file per user containing analysis results for all languages.
-
-## Development
-
-### Prerequisites
-
-- Python 3.8 or higher
-- pip (Python package manager)
-
-### Installation
-
-1. Clone the repository:
-   ```
-   git clone https://github.com/username/ai4fairedu.git
-   cd ai4fairedu
-   ```
-
-2. Create a virtual environment:
-   ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. Install dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-
-4. Create a `.env` file with your configuration:
-   ```
-   OPENAI_API_KEY=your_api_key
-   SYSTEM_LANGUAGE=en
-   ```
-
-### Running the Application
 
 ```
-cd frontend
-python app.py
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           Flask Web应用层                                │
+│                                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │ 用户认证模块 │  │ 问卷管理模块 │  │ 学习材料管理 │  │ 结果展示模块 │     │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │
+└───────────────────────────────┬─────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         LangGraph工作流引擎                              │
+│                                                                         │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │                        状态路由器                                │    │
+│  └───────────┬─────────────────┬────────────────┬─────────────────┘    │
+│              │                 │                │                      │
+│              ▼                 ▼                ▼                      │
+│  ┌───────────────────┐ ┌───────────────┐ ┌──────────────────┐          │
+│  │ 用户特征分析节点   │ │ 内容优化节点  │ │ 阅读增强节点     │          │
+│  └───────────────────┘ └───────────────┘ └──────────────────┘          │
+│              │                 │                │                      │
+│              └─────────────────┼────────────────┘                      │
+│                                │                                       │
+│                                ▼                                       │
+│  ┌───────────────────┐ ┌───────────────┐                               │
+│  │ 内容生成处理节点   │ │ 通用工具节点  │                               │
+│  └───────────────────┘ └───────────────┘                               │
+└───────────────────────────────┬─────────────────────────────────────────┘
+                                │
+                                ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                           LLM服务与工具层                                │
+│                                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │ 微内容分割器 │  │ 句法简化器   │  │ 内容生成器   │  │ 文本高亮工具 │     │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │
+│                                                                         │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │
+│  │ 提示模板管理 │  │ 内容分析器   │  │ 评估工具    │  │ 配置管理器   │     │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘     │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
 
-The application will be available at http://localhost:5000.
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details. 
 
 
-## todo
-[] translate http://10.201.8.114:5001/material-processing
-[] progress bar in material processing
+### 架构说明
+
+- **用户界面层**：负责与用户交互，收集用户信息和学习材料，展示处理结果
+- **编排控制层**：协调各功能模块，管理工作流，确保系统按正确顺序执行
+- **智能体群和工具集**：实现具体的支持功能，包括ADHD支持、阅读障碍支持和通用学习工具
+- **LLM服务层**：提供大语言模型能力，处理自然语言理解和生成任务
+
+### 工作流程
+
+1. 系统首先分析用户的学习障碍特征，识别障碍类型和严重程度
+2. 根据分析结果，系统选择合适的支持策略组合
+3. 对输入的学习材料进行处理，应用相应的支持技术
+4. 生成适合用户特定需求的学习内容和辅助材料
+5. 收集用户反馈，持续优化支持策略
+
+## 功能模块
+
+### 用户画像分析
+
+- **学习障碍识别**：基于DSM-5标准分析用户特征，识别ADHD和阅读障碍
+- **严重程度评估**：评估学习障碍对用户学习的影响程度
+- **个性化策略生成**：根据用户特征生成定制化支持策略
+
+### 注意力障碍(ADHD)支持系统
+
+#### 内容重构智能体
+- **微内容分割器**：将长篇内容分解为5-10分钟可完成的学习单元，每个单元有明确目标和即时反馈
+- **渐进式复杂度调整**：初始呈现简化版本，随着注意力持续逐步引入细节，保持认知负荷适中
+- **关键信息提取器**：为长文本生成分层大纲和关键点摘要，帮助学习者把握核心内容
+
+#### 注意力管理助手
+- **时间感知提示系统**：设置智能提醒，在注意力自然下降周期前发出提示，避免完全分心
+- **任务分解规划器**：将复杂任务分解为明确步骤，提供任务完成路线图和时间估计
+- **专注模式生成器**：创建个性化的学习环境设置指南、番茄工作法时间表和注意力恢复策略
+
+#### 学习参与度增强器
+- **个性化关联生成器**：将学习内容与学习者兴趣领域建立联系，增加相关性和参与度
+- **主动检索练习设计**：创建间隔重复提问，要求学习者主动回忆内容，强化学习和注意力
+- **游戏化元素构建器**：设计进度追踪、成就系统和挑战任务，提高学习动机
+
+### 阅读障碍(Dyslexia)辅助系统
+
+#### 文本优化智能体
+- **句法简化器**：重构复杂句式为简短、清晰的表达，降低认知负担
+- **词汇替换引擎**：识别潜在困难词汇，提供同义替换或简化解释
+- **语义分块器**：将文本重组为语义单元，增强信息处理效率
+
+## 安装与使用
+
+### 环境要求
+
+- Python 3.10+
+- Poetry 依赖管理工具
+- OpenAI API 密钥（或兼容的替代API）
+
+### 安装步骤
+
+1. 克隆仓库
+```bash
+git clone https://github.com/SHAO-Jiaqi757/ai4fairedu.git
+cd ai4fairedu
+```
+
+2. 安装依赖
+```bash
+poetry install
+```
+
+3. 配置环境变量
+```bash
+# 创建.env文件
+cp .env.example .env
+# 编辑.env文件，添加你的API密钥
+```
+
+### 使用方法
+
+1. 分析用户画像并处理学习材料
+```bash
+python -m src.main --material path/to/learning_material.txt --user-profile path/to/user_profile.json
+```
+
+2. 仅分析用户画像
+```bash
+python -m src.main --user-profile path/to/user_profile.json
+```
+
+3. 使用配置文件
+```bash
+python -m src.main --config path/to/config.json
+```
+
+## 开发状态
+
+### 已实现功能
+
+- ✅ 用户画像分析
+- ✅ 微内容分割器
+- ✅ 句法简化器
+- ✅ 基本工作流框架
+
+
+### 计划功能
+
+- ⏳ 时间感知提示系统
+- ⏳ 专注模式生成器
+- ⏳ 个性化关联生成器
+- ⏳ 预读问题生成器
+- ⏳ 概念图构建助手
+- ⏳ 多感官联想生成器
+- ⏳ 音素意识练习设计
+- ⏳ 快速命名训练生成器
+- ⏳ 渐进式阅读流畅度练习
+- ⏳ 游戏化元素构建器
+- ⏳ 主动检索练习设计
+
+## 贡献指南
+
+我们欢迎各种形式的贡献，包括但不限于：
+
+- 代码贡献
+- 文档改进
+- 功能建议
+- 错误报告
+- 用户测试反馈
+
+### 贡献步骤
+
+1. Fork 仓库
+2. 创建功能分支 (`git checkout -b feature/amazing-feature`)
+3. 提交更改 (`git commit -m 'Add some amazing feature'`)
+4. 推送到分支 (`git push origin feature/amazing-feature`)
+5. 创建 Pull Request
