@@ -787,7 +787,8 @@ def material_processing():
     
     return render_template('material_processing.html', 
                           material=session.get('current_material', {}),
-                          user_analysis=session.get('user_analysis', {}))
+                          user_analysis=session.get('user_analysis', {}),
+                          language=session.get('language', 'en'))
 
 @app.route('/api/check-processing-status')
 def check_processing_status():

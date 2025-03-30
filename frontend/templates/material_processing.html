@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Processing Material - AI4FairEdu{% endblock %}
+{% block title %}{{ t('material_processing', 'title') }} - {{ t('base', 'site_title') }}{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/material_processing.css') }}">
@@ -8,8 +8,8 @@
 
 {% block content %}
 <section class="page-header">
-    <h1>Processing Your Learning Material</h1>
-    <p class="subtitle">Our AI agents are adapting your content</p>
+    <h1>{{ t('material_processing', 'title') }}</h1>
+    <p class="subtitle">{{ t('material_processing', 'subtitle') }}</p>
 </section>
 
 <section class="processing-section">
@@ -17,8 +17,8 @@
         <div class="material-info">
             <h2>{{ material.title }}</h2>
             <div class="material-stats">
-                <span>{{ material.word_count }} words</span>
-                <span>~{{ material.estimated_reading_time }} min read</span>
+                <span>{{ material.word_count }} {{ t('material_processing', 'word_count') }}</span>
+                <span>~{{ material.estimated_reading_time }} {{ t('material_processing', 'reading_time') }}</span>
             </div>
         </div>
         
@@ -28,20 +28,20 @@
             </div>
             <div class="progress-status">
                 <span class="progress-percentage">0%</span>
-                <span class="progress-message">Starting processing...</span>
+                <span class="progress-message">{{ t('material_processing', 'progress_start') }}</span>
             </div>
         </div>
         
         <div class="agent-activity">
-            <h3>AI Agent Activity</h3>
+            <h3>{{ t('material_processing', 'agent_activity') }}</h3>
             <div class="agent-cards">
                 <div class="agent-card" id="profile-analyzer-card">
                     <div class="agent-icon">
                         <img src="{{ url_for('static', filename='images/team/profile-analyzer.svg') }}" alt="Profile Analyzer">
                     </div>
                     <div class="agent-info">
-                        <h4>Profile Analyzer</h4>
-                        <p class="agent-status">Waiting...</p>
+                        <h4>{{ t('material_processing', 'profile_analyzer') }}</h4>
+                        <p class="agent-status">{{ t('material_processing', 'waiting') }}</p>
                     </div>
                 </div>
                 
@@ -51,8 +51,8 @@
                         <img src="{{ url_for('static', filename='images/team/adhd-support.svg') }}" alt="Focus Enhancer">
                     </div>
                     <div class="agent-info">
-                        <h4>Focus Enhancer</h4>
-                        <p class="agent-status">Waiting...</p>
+                        <h4>{{ t('material_processing', 'focus_enhancer') }}</h4>
+                        <p class="agent-status">{{ t('material_processing', 'waiting') }}</p>
                     </div>
                 </div>
                 {% endif %}
@@ -63,8 +63,8 @@
                         <img src="{{ url_for('static', filename='images/team/dyslexia-support.svg') }}" alt="Text Transformer">
                     </div>
                     <div class="agent-info">
-                        <h4>Text Transformer</h4>
-                        <p class="agent-status">Waiting...</p>
+                        <h4>{{ t('material_processing', 'text_transformer') }}</h4>
+                        <p class="agent-status">{{ t('material_processing', 'waiting') }}</p>
                     </div>
                 </div>
                 {% endif %}
@@ -75,8 +75,8 @@
                         <img src="{{ url_for('static', filename='images/team/highlighter.svg') }}" alt="Content Highlighter">
                     </div>
                     <div class="agent-info">
-                        <h4>Content Highlighter</h4>
-                        <p class="agent-status">Waiting...</p>
+                        <h4>{{ t('material_processing', 'content_highlighter') }}</h4>
+                        <p class="agent-status">{{ t('material_processing', 'waiting') }}</p>
                     </div>
                 </div>
                 {% endif %}
@@ -86,60 +86,60 @@
                         <img src="{{ url_for('static', filename='images/team/dashboard-analyzer.svg') }}" alt="Insight Generator">
                     </div>
                     <div class="agent-info">
-                        <h4>Insight Generator</h4>
-                        <p class="agent-status">Waiting...</p>
+                        <h4>{{ t('material_processing', 'insight_generator') }}</h4>
+                        <p class="agent-status">{{ t('material_processing', 'waiting') }}</p>
                     </div>
                 </div>
             </div>
         </div>
         
         <div class="agent-insights" style="display: none;">
-            <h3>AI Agent Insights</h3>
+            <h3>{{ t('material_processing', 'agent_insights') }}</h3>
             <div class="insights-container">
                 <!-- Agent insights will be populated here -->
             </div>
         </div>
         
         <div class="processing-actions">
-            <button id="view-material" class="btn btn-primary btn-large" disabled>View Processed Material</button>
-            <button id="cancel-processing" class="btn btn-secondary">Cancel</button>
+            <button id="view-material" class="btn btn-primary btn-large" disabled>{{ t('material_processing', 'view_button') }}</button>
+            <button id="cancel-processing" class="btn btn-secondary">{{ t('material_processing', 'cancel_button') }}</button>
         </div>
     </div>
 </section>
 
 <section class="processing-explanation">
-    <h2>What's Happening Behind the Scenes</h2>
+    <h2>{{ t('material_processing', 'behind_scenes') }}</h2>
     <div class="explanation-grid">
         <div class="explanation-card">
             <div class="explanation-icon">
                 <i class="fas fa-user-check"></i>
             </div>
-            <h3>Profile Analysis</h3>
-            <p>Our Profile Analyzer agent is using your questionnaire responses to identify your specific learning needs.</p>
+            <h3>{{ t('material_processing', 'profile_analysis_title') }}</h3>
+            <p>{{ t('material_processing', 'profile_analysis_text') }}</p>
         </div>
         
         <div class="explanation-card">
             <div class="explanation-icon">
                 <i class="fas fa-file-alt"></i>
             </div>
-            <h3>Content Analysis</h3>
-            <p>Our AI is analyzing your learning material to understand its structure, complexity, and key concepts.</p>
+            <h3>{{ t('material_processing', 'content_analysis_title') }}</h3>
+            <p>{{ t('material_processing', 'content_analysis_text') }}</p>
         </div>
         
         <div class="explanation-card">
             <div class="explanation-icon">
                 <i class="fas fa-magic"></i>
             </div>
-            <h3>Personalized Adaptation</h3>
-            <p>Specialized AI agents are transforming your content based on your learning profile and selected options.</p>
+            <h3>{{ t('material_processing', 'adaptation_title') }}</h3>
+            <p>{{ t('material_processing', 'adaptation_text') }}</p>
         </div>
         
         <div class="explanation-card">
             <div class="explanation-icon">
                 <i class="fas fa-chart-line"></i>
             </div>
-            <h3>Learning Optimization</h3>
-            <p>The system is generating insights and recommendations to optimize your learning experience.</p>
+            <h3>{{ t('material_processing', 'optimization_title') }}</h3>
+            <p>{{ t('material_processing', 'optimization_text') }}</p>
         </div>
     </div>
 </section>
@@ -156,6 +156,9 @@
         const agentInsightsSection = document.querySelector('.agent-insights');
         const insightsContainer = document.querySelector('.insights-container');
         
+        // Add loading animation to progress message
+        progressMessage.classList.add('loading');
+        
         // Agent status elements
         const profileAnalyzerStatus = document.querySelector('#profile-analyzer-card .agent-status');
         const focusEnhancerStatus = document.querySelector('#focus-enhancer-card .agent-status');
@@ -163,14 +166,26 @@
         const highlighterStatus = document.querySelector('#highlighter-card .agent-status');
         const insightGeneratorStatus = document.querySelector('#insight-generator-card .agent-status');
         
+        // Translated messages
+        const agentMessages = {
+            analyzing_profile: "{{ t('material_processing', 'analyzing_profile') }}",
+            analysis_complete: "{{ t('material_processing', 'analysis_complete') }}",
+            creating_micro_content: "{{ t('material_processing', 'creating_micro_content') }}",
+            simplifying_text: "{{ t('material_processing', 'simplifying_text') }}",
+            highlighting_content: "{{ t('material_processing', 'highlighting_content') }}",
+            generating_insights: "{{ t('material_processing', 'generating_insights') }}",
+            processing_complete: "{{ t('material_processing', 'processing_complete') }}",
+            processing_error: "{{ t('material_processing', 'processing_error') }}"
+        };
+        
         // Function to update agent status based on progress
         function updateAgentStatus(progress) {
             // Profile Analyzer (0-20%)
             if (progress < 20) {
-                profileAnalyzerStatus.textContent = "Analyzing user profile...";
+                profileAnalyzerStatus.textContent = agentMessages.analyzing_profile;
                 profileAnalyzerStatus.classList.add('active');
             } else {
-                profileAnalyzerStatus.textContent = "Analysis complete";
+                profileAnalyzerStatus.textContent = agentMessages.analysis_complete;
                 profileAnalyzerStatus.classList.remove('active');
                 profileAnalyzerStatus.classList.add('complete');
             }
@@ -178,10 +193,10 @@
             // Focus Enhancer (20-40%)
             if (focusEnhancerStatus) {
                 if (progress >= 20 && progress < 40) {
-                    focusEnhancerStatus.textContent = "Creating micro-content units...";
+                    focusEnhancerStatus.textContent = agentMessages.creating_micro_content;
                     focusEnhancerStatus.classList.add('active');
                 } else if (progress >= 40) {
-                    focusEnhancerStatus.textContent = "Processing complete";
+                    focusEnhancerStatus.textContent = agentMessages.processing_complete;
                     focusEnhancerStatus.classList.remove('active');
                     focusEnhancerStatus.classList.add('complete');
                 }
@@ -190,10 +205,10 @@
             // Text Transformer (40-60%)
             if (textTransformerStatus) {
                 if (progress >= 40 && progress < 60) {
-                    textTransformerStatus.textContent = "Simplifying text...";
+                    textTransformerStatus.textContent = agentMessages.simplifying_text;
                     textTransformerStatus.classList.add('active');
                 } else if (progress >= 60) {
-                    textTransformerStatus.textContent = "Processing complete";
+                    textTransformerStatus.textContent = agentMessages.processing_complete;
                     textTransformerStatus.classList.remove('active');
                     textTransformerStatus.classList.add('complete');
                 }
@@ -202,10 +217,10 @@
             // Highlighter (60-80%)
             if (highlighterStatus) {
                 if (progress >= 60 && progress < 80) {
-                    highlighterStatus.textContent = "Highlighting important content...";
+                    highlighterStatus.textContent = agentMessages.highlighting_content;
                     highlighterStatus.classList.add('active');
                 } else if (progress >= 80) {
-                    highlighterStatus.textContent = "Processing complete";
+                    highlighterStatus.textContent = agentMessages.processing_complete;
                     highlighterStatus.classList.remove('active');
                     highlighterStatus.classList.add('complete');
                 }
@@ -213,10 +228,10 @@
             
             // Insight Generator (80-100%)
             if (progress >= 80 && progress < 100) {
-                insightGeneratorStatus.textContent = "Generating insights...";
+                insightGeneratorStatus.textContent = agentMessages.generating_insights;
                 insightGeneratorStatus.classList.add('active');
             } else if (progress >= 100) {
-                insightGeneratorStatus.textContent = "Processing complete";
+                insightGeneratorStatus.textContent = agentMessages.processing_complete;
                 insightGeneratorStatus.classList.remove('active');
                 insightGeneratorStatus.classList.add('complete');
             }
@@ -240,66 +255,88 @@
             agentInsightsSection.style.display = 'block';
         }
         
+        // Initialize last progress to track changes
+        let lastProgress = 0;
+        
         // Function to check processing status
         function checkProcessingStatus() {
             fetch('/api/check-processing-status')
                 .then(response => response.json())
                 .then(data => {
                     if (data.error) {
-                        progressMessage.textContent = `Error: ${data.error}`;
+                        progressMessage.textContent = `${agentMessages.processing_error}${data.error}`;
+                        progressMessage.classList.remove('loading');
                         return;
                     }
                     
                     const progress = data.progress || 0;
-                    progressFill.style.width = `${progress}%`;
-                    progressPercentage.textContent = `${progress}%`;
-                    progressMessage.textContent = data.message || 'Processing...';
                     
-                    // Update agent status
+                    // Animate progress bar only when progress increases
+                    if (progress > lastProgress) {
+                        progressFill.style.width = `${progress}%`;
+                        progressPercentage.textContent = `${progress}%`;
+                        lastProgress = progress;
+                    }
+                    
+                    if (data.message) {
+                        progressMessage.textContent = data.message;
+                    }
+                    
                     updateAgentStatus(progress);
                     
-                    // If processing is complete
-                    if (data.status === 'complete') {
+                    if (data.insights) {
+                        displayAgentInsights(data.insights);
+                    }
+                    
+                    if (progress < 100 && !data.error) {
+                        // Continue checking status
+                        setTimeout(checkProcessingStatus, 1500);
+                    } else if (progress >= 100) {
+                        // Enable view button
                         viewMaterialBtn.disabled = false;
-                        cancelBtn.textContent = 'Back to Dashboard';
                         
-                        // Display agent insights if available
-                        if (data.agent_insights) {
-                            displayAgentInsights(data.agent_insights);
-                        }
+                        // Stop the animation in the progress message
+                        progressMessage.classList.remove('loading');
                         
-                        // Update session with file references if available
-                        if (data.file_references) {
-                            console.log("File references received:", data.file_references);
-                        }
-                        
-                        // Stop polling
-                        clearInterval(statusInterval);
+                        // Update message for completion
+                        progressMessage.textContent = agentMessages.processing_complete;
                     }
                 })
                 .catch(error => {
-                    console.error('Error checking status:', error);
-                    progressMessage.textContent = 'Error checking status';
+                    console.error('Error checking processing status:', error);
+                    setTimeout(checkProcessingStatus, 3000); // Retry with longer delay
                 });
         }
         
-        // Check status immediately and then every 2 seconds
+        // Start checking status
         checkProcessingStatus();
-        const statusInterval = setInterval(checkProcessingStatus, 2000);
         
-        // View material button
+        // Handle view button click
         viewMaterialBtn.addEventListener('click', function() {
             window.location.href = '/learning-view';
         });
         
-        // Cancel button
+        // Handle cancel button click
         cancelBtn.addEventListener('click', function() {
-            if (this.textContent === 'Back to Dashboard') {
-                window.location.href = '/dashboard';
-            } else {
-                // In a real implementation, you would cancel the processing job
-                clearInterval(statusInterval);
-                window.location.href = '/material-upload';
+            if (confirm('Are you sure you want to cancel processing?')) {
+                fetch('/api/cancel-processing', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert('Error canceling process: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while trying to cancel processing.');
+                });
             }
         });
     });

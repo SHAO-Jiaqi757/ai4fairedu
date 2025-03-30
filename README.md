@@ -92,7 +92,3 @@ The application will be available at http://localhost:5000.
 
 This project is licensed under the MIT License - see the LICENSE file for details. 
 
-
-## todo
-[] translate http://10.201.8.114:5001/material-processing
-[] progress bar in material processing
